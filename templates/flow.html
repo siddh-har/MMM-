@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .luxury-gradient {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+    }
+    .hotel-card {
+        transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+    .hotel-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 40px 80px -15px rgba(0,0,0,0.12);
+    }
+    .hotel-card img {
+        transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .hotel-card:hover img {
+        transform: scale(1.15);
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section id="flow-container-section" class="hidden min-h-screen flex items-center justify-center luxury-gradient pt-20">
+    <div id="flow-container" class="w-full max-w-4xl px-6">
+        <!-- Question Step (Dynamic) -->
+        <div id="question-card" class="glass p-12 rounded-3xl text-white opacity-0 translate-y-10 scale-95">
+            <div id="step-content">
+                <!-- Content will be injected by JS -->
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mt-12 w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+            <div id="progress-bar" class="bg-indigo-500 h-full w-0 transition-all duration-700 ease-out"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Results Container -->
+<section id="results-section" class="min-h-[60vh] bg-gray-50 py-32 px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <div class="opacity-0 translate-x-[-20px]" id="results-header">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-4 block">Discovery</span>
+                <h2 class="text-5xl font-black text-gray-900 leading-tight">Explore <br> <span class="text-indigo-400">All Destinations.</span></h2>
+                <p class="text-gray-500 mt-4">Handpicked based on your search and interest in Kolhapur.</p>
+            </div>
+            <a href="/" class="px-8 py-4 bg-white border border-gray-200 rounded-2xl font-bold text-gray-600 hover:border-indigo-400 hover:text-indigo-600 transition-smooth shadow-sm opacity-0 translate-y-4" id="results-back">Back Home</a>
+        </div>
+        <div id="hotel-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Hotel cards will be injected here -->
+            {% for i in range(6) %}
+            <div class="animate-pulse bg-gray-200 rounded-xl h-[400px]"></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Section -->
+<section id="hotels-section" class="py-32 bg-white px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <div class="featured-text opacity-0 -translate-x-12">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-4 block">Top Rated</span>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 leading-tight">Featured <br> <span class="text-indigo-400">Destinations.</span></h2>
+            </div>
+            <a href="/flow" class="text-indigo-600 font-bold hover:underline">Explore More</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for hotel in featured_hotels %}
+            <div class="hotel-card-index bg-gray-50 rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 opacity-0 translate-y-12 flex flex-col h-full">
+                <div class="relative h-56 flex-shrink-0">
+                    <img src="{{ hotel.image_url }}" class="w-full h-full object-cover">
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-xl flex flex-col items-center">
+                        <div class="flex text-indigo-600 text-[10px] mb-0.5">
+                            {% set rating = hotel.rating|round|int %}
+                            {% for i in range(5) %}
+                                <span class="{% if i < rating %}opacity-100{% else %}opacity-30{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                        <span class="text-[10px] font-black text-gray-900">{{ hotel.rating|round(1) }}</span>
+                    </div>
+                </div>
+                <div class="p-7 flex flex-col flex-grow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1 pr-2">
+                            <h3 class="text-xl font-black text-gray-900 line-clamp-1">{{ hotel.name }}</h3>
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">{{ hotel.location }}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span class="text-indigo-600 font-black text-lg">₹{{ hotel.price|int }}</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase block tracking-tighter">{% if hotel.category == 'Stay' %}per night{% else %}avg cost{% endif %}</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed flex-grow">{{ hotel.description }}</p>
+                    <div class="mt-auto">
+                        <a href="/hotel/{{ hotel.id }}" class="block w-full bg-gray-900 text-white text-center py-3.5 rounded-xl font-bold hover:bg-black transition-smooth">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('category');
+    const budget = urlParams.get('budget');
+    
+    // Immediately show results as per request to remove quiz in explore
+    window.addEventListener('DOMContentLoaded', async () => {
+        gsap.to('#results-header', { opacity: 1, x: 0, duration: 1, ease: 'power3.out' });
+        gsap.to('#results-back', { opacity: 1, y: 0, duration: 1, delay: 0.2, ease: 'power3.out' });
+        
+        await loadExploreResults();
+
+        // Featured section animations
+        gsap.to('.featured-text', { scrollTrigger: '#hotels-section', opacity: 1, x: 0, duration: 1 });
+        gsap.to('.hotel-card-index', { scrollTrigger: '#hotels-section', opacity: 1, y: 0, duration: 1, stagger: 0.2 });
+    });
+
+    async function loadExploreResults() {
+        try {
+            // Using the explore API that returns all hotels sorted by interest
+            const res = await fetch('/api/hotels/explore');
+            const hotels = await res.json();
+            renderResults(hotels);
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('hotel-grid').innerHTML = '<p class="col-span-full text-center py-20 text-gray-400">Failed to load destinations.</p>';
+        }
+    }
+
+    function renderResults(hotels) {
+        const grid = document.getElementById('hotel-grid');
+        grid.innerHTML = hotels.map((h, index) => `
+            <div class="hotel-card bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 opacity-0 translate-y-12 flex flex-col h-full">
+                <div class="relative h-56 flex-shrink-0">
+                    <img src="${h.image_url}" class="w-full h-full object-cover" alt="${h.name}">
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-xl flex flex-col items-center">
+                        <div class="flex text-indigo-600 text-[10px] mb-0.5">
+                            ${Array(5).fill(0).map((_, i) => `<span class="${i < Math.round(h.rating) ? 'opacity-100' : 'opacity-30'}">★</span>`).join('')}
+                        </div>
+                        <span class="text-[10px] font-black text-gray-900">${parseFloat(h.rating).toFixed(1)}</span>
+                    </div>
+                </div>
+                <div class="p-7 flex flex-col flex-grow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1 pr-2">
+                            <h3 class="text-xl font-black text-gray-900 line-clamp-1">${h.name}</h3>
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">${h.category} • ${h.location}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span class="text-indigo-600 font-black text-lg">₹${Math.round(h.price)}</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase block tracking-tighter">${h.category === 'Stay' ? 'per night' : 'avg cost'}</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed flex-grow">${h.description}</p>
+                    <div class="flex gap-4 mt-auto">
+                        <a href="/hotel/${h.id}" class="flex-1 bg-indigo-600 text-white text-center py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-smooth shadow-lg shadow-indigo-600/20">View Details</a>
+                        <a href="${h.google_maps_url}" target="_blank" class="w-12 h-12 bg-gray-100 flex items-center justify-center rounded-xl hover:bg-gray-200 transition-smooth text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        gsap.to('.hotel-card', { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: 'power3.out' });
+    }
+</script>
+{% endblock %}

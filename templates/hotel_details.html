@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block content %}
+<section class="pt-40 pb-32 bg-white px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
+            <!-- Image Section -->
+            <div class="relative rounded-3xl overflow-hidden luxury-shadow group">
+                <img src="{{ hotel.image_url }}" class="w-full aspect-[4/5] object-cover transition-smooth duration-1000 group-hover:scale-105" alt="{{ hotel.name }}">
+                <div class="absolute top-10 right-10 bg-white/90 backdrop-blur-xl px-6 py-4 rounded-xl flex flex-col items-center shadow-2xl border border-white/20">
+                    <div class="flex text-indigo-600 text-sm mb-1">
+                        {% set rating = hotel.rating|round|int %}
+                        {% for i in range(5) %}
+                            <span class="{% if i < rating %}opacity-100{% else %}opacity-30{% endif %}">★</span>
+                        {% endfor %}
+                    </div>
+                    <span class="text-xs font-black text-gray-900 tracking-tighter">{{ hotel.rating|round(1) }}</span>
+                </div>
+            </div>
+
+            <!-- Content Section -->
+            <div class="py-10">
+                <div class="mb-12">
+                    <div class="flex items-center gap-4 mb-4">
+                        <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs">{{ hotel.category }}</span>
+                        {% if hotel.tags %}
+                            {% for tag in hotel.tags %}
+                                <span class="bg-gray-100 text-gray-500 text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-wider">{{ tag }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <h1 class="text-6xl font-black text-gray-900 mb-6 leading-tight">{{ hotel.name }}</h1>
+                    <div class="flex items-center gap-3 text-gray-400 font-medium">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        {{ hotel.location }}
+                    </div>
+                </div>
+
+                <!-- Recommendation Reasons -->
+                {% if reasons %}
+                <div class="bg-indigo-50/50 border border-indigo-100 p-8 rounded-2xl mb-12">
+                    <h4 class="text-indigo-900 font-black text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        Why we recommend this
+                    </h4>
+                    <ul class="space-y-2">
+                        {% for reason in reasons %}
+                            <li class="text-indigo-700 font-bold flex items-center gap-3">
+                                <div class="w-1.5 h-1.5 bg-indigo-400 rounded-full"></div>
+                                {{ reason }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="space-y-12">
+                    <div>
+                        <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">About this Spot</h4>
+                        <p class="text-gray-600 text-lg leading-relaxed">{{ hotel.description }}</p>
+                    </div>
+
+                    {% if hotel.famous_for %}
+                    <div class="p-8 bg-gray-50 rounded-2xl border border-gray-100">
+                        <h4 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-3">Famous For</h4>
+                        <p class="text-gray-900 font-bold text-xl">{{ hotel.famous_for }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if hotel.food_available and hotel.food_menu %}
+                    <div>
+                        <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">On the Menu</h4>
+                        <div class="bg-white border border-gray-100 p-8 rounded-2xl shadow-sm italic text-gray-600 leading-relaxed">
+                            "{{ hotel.food_menu }}"
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="grid grid-cols-2 gap-8 pt-6 border-t border-gray-100">
+                        <div>
+                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Per Night Charge</h4>
+                            <p class="text-indigo-600 text-3xl font-black">₹{{ hotel.price|int }}</p>
+                        </div>
+                        <div>
+                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Amenities</h4>
+                            <div class="flex flex-wrap gap-2">
+                                {% if hotel.amenities %}
+                                    {% for am in hotel.amenities %}
+                                        <span class="text-xs font-bold text-gray-900 bg-gray-50 px-3 py-1 rounded-lg">{{ am }}</span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Images Gallery -->
+        {% if hotel.additional_images %}
+        <div class="mt-32">
+            <h4 class="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-12 text-center">Gallery Experience</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {% for img in hotel.additional_images %}
+                <div class="rounded-2xl overflow-hidden shadow-xl aspect-square">
+                    <img src="{{ img }}" class="w-full h-full object-cover gallery-img" alt="Gallery Image">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Similar Hotels Section -->
+        {% if similar_hotels %}
+        <div class="mt-40">
+            <div class="flex justify-between items-end mb-16">
+                <div>
+                    <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-4 block">You might also like</span>
+                    <h2 class="text-4xl font-black text-gray-900">Similar <span class="text-indigo-400">Discoveries.</span></h2>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                {% for h in similar_hotels %}
+                <a href="/hotel/{{ h.id }}" class="group">
+                    <div class="detail-card rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-500">
+                        <div class="relative h-48">
+                            <img src="{{ h.image_url }}" class="w-full h-full object-cover group-hover:scale-110 transition-smooth">
+                            <div class="absolute top-4 right-4 hotel-card-badge px-2 py-1 text-indigo-600">
+                                ★ {{ h.rating }}
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-black text-gray-900 mb-1 group-hover:text-indigo-600 transition-smooth">{{ h.name }}</h3>
+                            <p class="text-gray-400 text-[10px] font-bold uppercase">{{ h.location }}</p>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    // Force navbar to rounded state for details page
+    window.addEventListener('DOMContentLoaded', () => {
+        const nav = document.getElementById('navbar');
+        nav.classList.add('nav-rounded');
+    });
+</script>
+{% endblock %}

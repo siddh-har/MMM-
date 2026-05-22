@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">sidd</string>
+    <string name="title_activity_main">sidd</string>
+    <string name="package_name">com.siddh.app</string>
+    <string name="custom_url_scheme">com.siddh.app</string>
+</resources>

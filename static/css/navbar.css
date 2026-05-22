@@ -1,0 +1,36 @@
+/* Floating Navbar Styles */
+#navbar {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#navbar.scrolled {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 40px);
+    max-width: 1200px;
+    border-radius: 2rem;
+    padding: 1rem 2rem;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+/* Specific Navbar Overrides for Subpages */
+.nav-solid {
+    background-color: #0f172a !important;
+    padding: 1rem 3rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-rounded {
+    background-color: rgba(15, 23, 42, 0.95) !important;
+    padding: 1rem 3rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0 0 2rem 2rem;
+    width: 100%;
+    top: 0;
+    left: 0;
+    transform: none;
+}

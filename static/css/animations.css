@@ -1,0 +1,53 @@
+/* Text & Visual Effects */
+.hero-text-glow {
+    text-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    letter-spacing: -0.03em;
+    line-height: 0.9;
+}
+
+.brand-accent {
+    background: linear-gradient(135deg, #818cf8, #c084fc, #fb7185);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900;
+    filter: drop-shadow(0 10px 20px rgba(129, 140, 248, 0.3));
+}
+
+/* Custom Search Glass Effect */
+.glass-search {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(30px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 40px 100px -20px rgba(0,0,0,0.6) !important;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none !important;
+}
+
+.glass-search:focus-within {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(129, 140, 248, 0.4) !important;
+    transform: none;
+    box-shadow: 0 0 40px rgba(124, 92, 255, 0.25), 0 20px 60px -10px rgba(0,0,0,0.5);
+}
+
+#hotel-search {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+#hotel-search:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Animations */
+@keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.animate-pulse-soft {
+    animation: pulse-soft 2s infinite ease-in-out;
+}

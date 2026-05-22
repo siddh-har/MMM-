@@ -1,0 +1,44 @@
+/* Authentication Page Styles */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.glass-auth-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border-radius: 3rem;
+    padding: 3rem;
+    width: 100%;
+    max-width: 28rem;
+    color: white;
+}
+
+/* Auth Form Labels */
+.auth-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+}
+
+/* Flash Messages */
+.flash-message {
+    background-color: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #fecaca;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    text-align: center;
+}

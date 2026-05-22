@@ -1,0 +1,499 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    .ken-burns {
+        animation: kenBurns 20s infinite alternate;
+        will-change: transform;
+    }
+    @keyframes kenBurns {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.15); }
+    }
+    .hero-slide {
+        transition: opacity 0.4s ease-in-out;
+        opacity: 0;
+        z-index: 0;
+    }
+    .hero-slide.active-slide {
+        opacity: 1;
+        z-index: 1;
+    }
+    .hero-slide.next-slide {
+        opacity: 1;
+        z-index: 2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="relative h-screen flex items-center justify-center overflow-hidden luxury-gradient">
+    <!-- Hero Background Slider -->
+    <div class="absolute inset-0 z-0 bg-black overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/80 z-10"></div>
+        <div id="slider-container" class="w-full h-full">
+            <div class="hero-slide absolute inset-0 active-slide">
+                <img src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1920&q=80" alt="Luxury Resort" class="w-full h-full object-cover ken-burns">
+            </div>
+            <div class="hero-slide absolute inset-0">
+                <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1920&q=80" alt="Modern Cafe" class="w-full h-full object-cover ken-burns" style="animation-delay: -1.5s;">
+            </div>
+            <div class="hero-slide absolute inset-0">
+                <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1920&q=80" alt="Premium Room" class="w-full h-full object-cover ken-burns" style="animation-delay: -3s;">
+            </div>
+            <div class="hero-slide absolute inset-0">
+                <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=80" alt="Fine Dining" class="w-full h-full object-cover ken-burns" style="animation-delay: -4.5s;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Content -->
+    <div class="relative z-20 text-center px-4 max-w-5xl mx-auto">
+        <h1 id="hero-title" class="text-6xl md:text-8xl font-black text-white mb-6 leading-tight opacity-0 hero-text-glow">
+            Unforgettable <br> <span class="brand-accent">Memories.</span>
+        </h1>
+        <p id="hero-subtitle" class="text-xl md:text-2xl text-white/90 mb-16 max-w-2xl mx-auto opacity-0 font-medium tracking-wide">
+            Discover premium hotels, cafes, and resorts <br> <span class="text-indigo-300 font-bold">Perfectly Planned.</span>
+        </p>
+
+        <!-- Unified Search Bar -->
+        <div id="search-bar-container" class="relative max-w-3xl mx-auto opacity-0 translate-y-10 group">
+            <div class="glass-search p-2.5 rounded-2xl flex items-center gap-2 border-white/20 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.5)] transition-smooth hover:border-white/40">
+                <div class="flex-1 relative">
+                    <input type="text" id="hotel-search" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter') triggerFind()" placeholder="Search hotels, cafes, restaurants, resorts..." class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-white/30 px-10 py-6 text-xl font-medium" autocomplete="off">
+                </div>
+                <button onclick="triggerFind()" class="bg-indigo-600 hover:bg-indigo-700 text-white p-6 rounded-full transition-smooth shadow-lg shadow-indigo-600/30 transform hover:scale-105 active:scale-95">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Suggestions Dropdown -->
+            <div id="suggestions" class="hidden absolute top-full left-0 w-full mt-6 glass rounded-2xl overflow-hidden shadow-2xl z-[100] border border-white/10 backdrop-blur-3xl">
+                <!-- Suggestions injected here -->
+            </div>
+        </div>
+
+        <!-- Quick Questions CTA -->
+        <div id="quiz-cta" class="mt-12 opacity-0 translate-y-10">
+            <button onclick="startQuiz()" class="group relative px-10 py-5 bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/20 rounded-2xl transition-smooth overflow-hidden">
+                <span class="relative z-10 text-white font-bold tracking-wide flex items-center gap-4">
+                    <span class="px-3 py-1 bg-indigo-600 rounded-full text-[10px] uppercase tracking-[0.2em] animate-pulse">New</span>
+                    GET Personalized recommendation <span class="text-indigo-400 font-black text-xl group-hover:scale-110 transition-smooth">START 🚀</span>
+                </span>
+                <div class="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-smooth"></div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Quiz Modal -->
+    <div id="quiz-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6 bg-black/80 backdrop-blur-2xl">
+        <div id="quiz-card" class="bg-white w-full max-w-xl rounded-3xl p-12 relative overflow-hidden shadow-2xl opacity-0 scale-95 translate-y-20">
+            <button onclick="startQuiz()" class="absolute top-10 left-10 text-gray-300 hover:text-indigo-600 transition-smooth" title="Restart Quiz">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+            <button onclick="closeQuiz()" class="absolute top-10 right-10 text-gray-300 hover:text-gray-900 transition-smooth">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            
+            <div id="quiz-content" class="text-center">
+                <!-- Question will be injected here -->
+            </div>
+
+            <!-- Quiz Progress -->
+            <div class="mt-12 flex justify-center gap-2" id="quiz-dots">
+                <!-- Dots injected here -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search Results Section -->
+<section id="results-section" class="hidden py-32 bg-gray-50 px-8 overflow-hidden min-h-[60vh] border-t border-gray-100">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start mb-16 gap-10">
+            <div id="results-header" class="opacity-0 -translate-x-12 flex-1">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-4 block">Recommendations Engine</span>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 leading-tight mb-8">Handpicked for <br> <span class="text-indigo-400">Your Search.</span></h2>
+                
+                <!-- Secondary Search for Efficiency -->
+                <div class="relative max-w-xl mb-8">
+                    <input type="text" id="secondary-search" oninput="handleSearch(this.value, 'secondary-suggestions')" onkeydown="if(event.key==='Enter') showImmediateResult(this.value)" placeholder="Search again..." class="w-full bg-white border border-gray-200 rounded-2xl px-6 py-4 text-gray-900 focus:ring-2 focus:ring-indigo-600 outline-none shadow-sm transition-all">
+                    <div id="secondary-suggestions" class="hidden absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl z-[100] border border-gray-100 overflow-hidden"></div>
+                </div>
+
+                <!-- Recent Searches Chips -->
+                <div id="recent-searches-container" class="hidden flex flex-wrap gap-2 mb-8">
+                    <span class="text-gray-400 text-[10px] font-bold uppercase tracking-widest w-full mb-1">Recent Searches</span>
+                    <!-- Chips injected here -->
+                </div>
+
+                <!-- Filter Toggle -->
+                <div class="mt-8 flex flex-col gap-4">
+                    <button onclick="toggleFilters()" class="flex items-center gap-3 text-gray-400 font-bold hover:text-indigo-600 transition-smooth text-sm uppercase tracking-wider">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                        Apply Filter
+                    </button>
+                    <div id="filter-panel" class="hidden flex flex-wrap gap-3 py-4">
+                        <div onclick="setFilter('Low')" class="filter-chip" data-filter="Low">Low (₹)</div>
+                        <div onclick="setFilter('Medium')" class="filter-chip" data-filter="Medium">Medium (₹₹)</div>
+                        <div onclick="setFilter('High')" class="filter-chip" data-filter="High">High (₹₹₹)</div>
+                        <div onclick="setFilter('Low-Medium')" class="filter-chip" data-filter="Low-Medium">Low-Medium</div>
+                        <div onclick="setFilter('Medium-High')" class="filter-chip" data-filter="Medium-High">Medium-High</div>
+                        <div onclick="setFilter('')" class="filter-chip active" data-filter="">All Budgets</div>
+                    </div>
+                </div>
+            </div>
+            <button onclick="hideResults()" class="bg-white border border-gray-100 p-4 rounded-xl text-gray-400 hover:text-gray-900 transition-smooth shadow-sm">Clear ✕</button>
+        </div>
+
+        <div id="results-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Cards -->
+        </div>
+    </div>
+</section>
+
+<!-- Featured Section -->
+<section id="hotels-section" class="py-32 bg-white px-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+            <div class="featured-text opacity-0 -translate-x-12">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-4 block">Top Rated</span>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 leading-tight">Featured <br> <span class="text-indigo-400">Destinations.</span></h2>
+            </div>
+            <a href="/flow?category=Stay&budget=Medium" class="text-indigo-600 font-bold hover:underline">Explore More</a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {% for hotel in featured_hotels %}
+            <div class="hotel-card-index bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 opacity-0 translate-y-12 flex flex-col h-full">
+                <div class="relative h-56 flex-shrink-0">
+                    <img src="{{ hotel.image_url }}" class="w-full h-full object-cover" alt="{{ hotel.name }}">
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-xl flex flex-col items-center">
+                        <div class="flex text-indigo-600 text-[10px] mb-0.5">
+                            {% set rating = hotel.rating|round|int %}
+                            {% for i in range(5) %}
+                                <span class="{% if i < rating %}opacity-100{% else %}opacity-30{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                        <span class="text-[10px] font-black text-gray-900">{{ hotel.rating|round(1) }}</span>
+                    </div>
+                </div>
+                <div class="p-7 flex flex-col flex-grow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1 pr-2">
+                            <h3 class="text-xl font-black text-gray-900 line-clamp-1">{{ hotel.name }}</h3>
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">{{ hotel.category }} • {{ hotel.location }}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span class="text-indigo-600 font-black text-lg">₹{{ hotel.price|int }}</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase block tracking-tighter">{% if hotel.category == 'Stay' %}per night{% else %}avg cost{% endif %}</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed flex-grow">{{ hotel.description }}</p>
+                    <div class="flex gap-4 mt-auto">
+                        <a href="/hotel/{{ hotel.id }}" class="flex-1 bg-indigo-600 text-white text-center py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-smooth shadow-lg shadow-indigo-600/20">View Details</a>
+                        <a href="{{ hotel.google_maps_url if hotel.google_maps_url and hotel.google_maps_url != 'https://goo.gl/maps/example' else 'https://www.google.com/maps/search/' + hotel.name|urlencode + '+' + hotel.location|urlencode }}" target="_blank" class="w-12 h-12 bg-gray-100 flex items-center justify-center rounded-xl hover:bg-gray-200 transition-smooth text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<script>
+    let activeFilter = '';
+
+    function toggleFilters() {
+        const panel = document.getElementById('filter-panel');
+        panel.classList.toggle('hidden');
+    }
+
+    function setFilter(filter) {
+        activeFilter = filter;
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.classList.remove('active');
+            if (chip.dataset.filter === filter) chip.classList.add('active');
+        });
+        triggerFind();
+    }
+
+    async function handleSearch(val, suggestionsId = 'suggestions') {
+        const suggestionsDiv = document.getElementById(suggestionsId);
+        if (val.length < 2) {
+            suggestionsDiv.classList.add('hidden');
+            return;
+        }
+
+        const res = await fetch(`/api/search?q=${val}`);
+        const data = await res.json();
+
+        if (data.length > 0) {
+            const isSecondary = suggestionsId === 'secondary-suggestions';
+            suggestionsDiv.innerHTML = data.map(h => `
+                <div onclick="showImmediateResult('${h.name}')" class="px-10 py-6 cursor-pointer ${isSecondary ? 'hover:bg-gray-50' : 'hover:bg-white/10'} border-b ${isSecondary ? 'border-gray-50' : 'border-white/5'} last:border-0 flex justify-between items-center group">
+                    <div>
+                        <div class="${isSecondary ? 'text-gray-900' : 'text-white'} font-bold text-lg">${h.name}</div>
+                        <div class="text-indigo-400 text-xs font-black uppercase tracking-widest">${h.category} • ${h.location}</div>
+                    </div>
+                    <svg class="w-6 h-6 text-indigo-400 opacity-0 group-hover:opacity-100 transition-smooth" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </div>
+            `).join('');
+            suggestionsDiv.classList.remove('hidden');
+        } else {
+            suggestionsDiv.classList.add('hidden');
+        }
+    }
+
+    async function fetchRecentSearches() {
+        const res = await fetch('/api/recent-searches');
+        const searches = await res.json();
+        const container = document.getElementById('recent-searches-container');
+        
+        if (searches.length > 0) {
+            container.innerHTML = `
+                <span class="text-gray-400 text-[10px] font-bold uppercase tracking-widest w-full mb-1">Recent Searches</span>
+                ${searches.map(s => `<div onclick="showImmediateResult('${s}')" class="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-500 hover:text-indigo-600 hover:border-indigo-200 cursor-pointer transition-smooth shadow-sm"># ${s}</div>`).join('')}
+            `;
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+
+    function triggerFind() {
+        const searchVal = document.getElementById('hotel-search').value;
+        showImmediateResult(searchVal);
+    }
+
+    async function showImmediateResult(query) {
+        document.getElementById('suggestions').classList.add('hidden');
+        document.getElementById('secondary-suggestions').classList.add('hidden');
+        document.getElementById('hotel-search').value = query;
+        document.getElementById('secondary-search').value = query;
+
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const hotels = await res.json();
+        renderResults(hotels, 'Search Results');
+        fetchRecentSearches(); // Refresh chips
+    }
+
+    function getStarsHTML(rating) {
+        const fullStars = Math.round(rating);
+        let stars = '';
+        for (let i = 0; i < 5; i++) {
+            stars += `<span class="${i < fullStars ? 'opacity-100' : 'opacity-30'}">★</span>`;
+        }
+        return `
+            <div class="flex flex-col items-center">
+                <div class="flex text-indigo-600 text-[10px] mb-0.5">${stars}</div>
+                <span class="text-[10px] font-black text-gray-900">${parseFloat(rating).toFixed(1)}</span>
+            </div>
+        `;
+    }
+
+    function renderResults(hotels, title = 'Search Results') {
+        const section = document.getElementById('results-section');
+        const grid = document.getElementById('results-grid');
+        const hero = document.querySelector('section.luxury-gradient');
+        
+        // Update Heading
+        document.querySelector('#results-header h2').innerHTML = `${title.split(' ')[0]} <br> <span class="text-indigo-400">${title.split(' ').slice(1).join(' ')}.</span>`;
+
+        // Hide hero and show results directly at top
+        hero.style.display = 'none';
+        section.classList.remove('hidden');
+        document.getElementById('navbar').classList.add('bg-gray-900', 'py-4');
+        
+        grid.innerHTML = hotels.length ? hotels.map(h => `
+            <div class="live-card bg-white rounded-xl overflow-hidden shadow-2xl transition-all duration-500 opacity-0 translate-y-12 flex flex-col h-full">
+                <div class="relative h-56 flex-shrink-0">
+                    <img src="${h.image_url}" class="w-full h-full object-cover">
+                    <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-xl shadow-xl flex flex-col items-center">
+                        ${getStarsHTML(h.rating)}
+                    </div>
+                    ${h.matchPercentage ? `
+                    <div class="absolute bottom-4 left-4 bg-indigo-600 text-white px-3 py-1.5 rounded-xl font-black text-[10px] shadow-lg">
+                        ${Math.round(h.matchPercentage)}% Match
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="p-7 flex flex-col flex-grow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1 pr-2">
+                            <h3 class="text-xl font-black text-gray-900 line-clamp-1">${h.name}</h3>
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">${h.category} • ${h.location}</p>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <span class="text-indigo-600 font-black text-lg">₹${Math.round(h.price)}</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase block tracking-tighter">${h.category === 'Stay' ? 'per night' : 'avg cost'}</span>
+                        </div>
+                    </div>
+                    
+                    ${h.recommendationReasons ? `
+                    <div class="flex flex-wrap gap-2 mb-5">
+                        ${h.recommendationReasons.map(r => `<span class="bg-indigo-50 text-indigo-600 text-[9px] font-bold px-3 py-1 rounded-full">✓ ${r}</span>`).join('')}
+                    </div>
+                    ` : ''}
+
+                    <p class="text-gray-500 text-sm mb-5 line-clamp-2 leading-relaxed flex-grow">${h.description}</p>
+                    <div class="flex gap-4 mt-auto">
+                        <a href="/hotel/${h.id}" class="flex-1 bg-indigo-600 text-white text-center py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition-smooth shadow-lg shadow-indigo-600/20">View Details</a>
+                        <a href="${h.google_maps_url && h.google_maps_url !== 'https://goo.gl/maps/example' ? h.google_maps_url : 'https://www.google.com/maps/search/' + encodeURIComponent(h.name + ' ' + h.location)}" target="_blank" class="w-12 h-12 bg-gray-100 flex items-center justify-center rounded-xl hover:bg-gray-200 transition-smooth text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `).join('') : '<div class="col-span-full py-20 text-center"><p class="text-2xl text-gray-300 italic">No spots found matching your criteria.</p><button onclick="location.reload()" class="mt-8 text-indigo-600 font-bold hover:underline">Reset Search</button></div>';
+
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        gsap.to('#results-header', { opacity: 1, x: 0, duration: 1 });
+        gsap.to('.live-card', { opacity: 1, y: 0, duration: 0.8, stagger: 0.1, ease: 'power3.out' });
+    }
+
+    function hideResults() {
+        document.getElementById('results-section').classList.add('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+            console.error('GSAP or ScrollTrigger not loaded');
+            return;
+        }
+        gsap.registerPlugin(ScrollTrigger);
+        const tl = gsap.timeline();
+        tl.to('#hero-title', { opacity: 1, y: 0, duration: 1.2, ease: 'power4.out', delay: 0.5 })
+          .to('#hero-subtitle', { opacity: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=0.8')
+          .to('#search-bar-container', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=0.6')
+          .to('#quiz-cta', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=0.4');
+
+        // Background Slider Logic
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.hero-slide');
+        if (slides.length > 1) {
+            setInterval(() => {
+                const nextSlide = (currentSlide + 1) % slides.length;
+                
+                // Bring next slide to front and fade in
+                slides[nextSlide].classList.add('next-slide');
+                
+                setTimeout(() => {
+                    // Once faded in, make it the active base and hide the old one
+                    slides[currentSlide].classList.remove('active-slide');
+                    slides[nextSlide].classList.remove('next-slide');
+                    slides[nextSlide].classList.add('active-slide');
+                    currentSlide = nextSlide;
+                }, 400); // Wait for transition duration
+                
+            }, 1200); // Advanced rapid change (~1s)
+        }
+
+        gsap.to('.featured-text', { scrollTrigger: '#hotels-section', opacity: 1, x: 0, duration: 1 });
+        gsap.to('.hotel-card-index', { scrollTrigger: '#hotels-section', opacity: 1, y: 0, duration: 1, stagger: 0.2 });
+        fetchRecentSearches();
+    });
+
+    // Quick Quiz Logic
+    let quizStep = 0;
+    let quizAnswers = {};
+    const quizQuestions = [
+        {
+            q: "Whats The Plan today? 🕒",
+            options: ["Stay 🏨", "Food 🍽️", "Both 🤩"],
+            key: "category"
+        },
+        {
+            q: "Whom With U Going? 🤝",
+            options: ["Friends 🍻", "Colleagues 💼", "Family 👨‍👩‍👧", "Couple 💖"],
+            key: "group_type"
+        },
+        {
+            q: "How you prefer? 💸",
+            options: ["Pocket friendly 💰", "Any One 💎"],
+            key: "budget"
+        },
+        {
+            q: "Food Preference? 🍕",
+            options: ["Veg 🥗", "Non-veg 🍖", "Both 🍱"],
+            key: "food_type",
+            condition: (ans) => ans.category !== "Stay 🏨"
+        }
+    ];
+
+    function startQuiz() {
+        quizStep = 0;
+        quizAnswers = {};
+        document.getElementById('quiz-modal').classList.remove('hidden');
+        renderQuizStep();
+    }
+
+    function closeQuiz() {
+        document.getElementById('quiz-modal').classList.add('hidden');
+    }
+
+    function renderQuizStep() {
+        const question = quizQuestions[quizStep];
+        if (question.condition && !question.condition(quizAnswers)) {
+            quizStep++;
+            renderQuizStep();
+            return;
+        }
+
+        const content = document.getElementById('quiz-content');
+        gsap.to('#quiz-card', { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: 'back.out(1.7)' });
+        
+        content.innerHTML = `
+            <div class="mb-8">
+                <span class="text-indigo-600 font-bold uppercase tracking-[0.3em] text-[10px]">Quick Quiz</span>
+                <h2 class="text-4xl font-black mt-4 text-gray-900">${question.q}</h2>
+            </div>
+            <div class="grid grid-cols-1 gap-4">
+                ${question.options.map(opt => `
+                    <button onclick="handleQuizAnswer('${opt}')" class="group bg-gray-50 hover:bg-indigo-600 hover:text-white p-6 rounded-2xl text-xl font-bold transition-all duration-300 border border-gray-100 hover:shadow-2xl hover:scale-[1.02] active:scale-95 flex items-center justify-between">
+                        ${opt}
+                        <span class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100">→</span>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+
+        const dots = document.getElementById('quiz-dots');
+        dots.innerHTML = quizQuestions.map((_, i) => `
+            <div class="w-2 h-2 rounded-full ${i === quizStep ? 'bg-indigo-600 w-8' : 'bg-gray-200'} transition-all duration-500"></div>
+        `).join('');
+    }
+
+    function handleQuizAnswer(ans) {
+        const key = quizQuestions[quizStep].key;
+        // Clean answer for API
+        quizAnswers[key] = ans.split(' ')[0];
+        if (quizAnswers[key] === "Pocket") quizAnswers[key] = "Low-Medium";
+        if (quizAnswers[key] === "Any") quizAnswers[key] = "High";
+
+        if (quizStep < quizQuestions.length - 1) {
+            quizStep++;
+            gsap.to('#quiz-content', { opacity: 0, x: -20, duration: 0.3, onComplete: () => {
+                renderQuizStep();
+                gsap.fromTo('#quiz-content', { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.3 });
+            }});
+        } else {
+            finishQuiz();
+        }
+    }
+
+    async function finishQuiz() {
+        gsap.to('#quiz-card', { opacity: 0, scale: 0.9, y: -20, duration: 0.4, onComplete: async () => {
+            closeQuiz();
+            const params = new URLSearchParams(quizAnswers).toString();
+            const res = await fetch(`/api/quiz-recommendations?${params}`);
+            const data = await res.json();
+            renderResults(data, 'Recommended For You');
+        }});
+    }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+{% endblock %}

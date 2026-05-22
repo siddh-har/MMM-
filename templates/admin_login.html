@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #f1f5f9; /* Bright, clean background */
+    }
+    
+    nav { 
+        background: rgba(15, 23, 42, 0.95) !important; 
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .admin-card {
+        background: white;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.1);
+    }
+
+    .input-field {
+        background: #ffffff;
+        border: 2px solid #cbd5e1;
+        color: #1e293b;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .input-field:focus {
+        background: white;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .admin-btn {
+        background: #4f46e5;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .admin-btn:hover {
+        background: #4338ca;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
+    }
+
+    .reveal { opacity: 0; transform: translateY(20px); }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="min-h-screen flex items-center justify-center px-4 pt-20">
+    <div class="w-full max-w-lg">
+        <div class="admin-card p-10 md:p-14 rounded-[3.5rem] text-gray-900 reveal">
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-indigo-50 rounded-3xl mb-6 border border-indigo-100">
+                    <svg class="w-10 h-10 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-black tracking-tight mb-2">Admin Portal</h1>
+                <p class="text-gray-500 font-medium">Secure access to the command center</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="bg-red-50 border border-red-100 text-red-600 px-6 py-4 rounded-2xl mb-8 text-sm font-bold text-center animate-pulse">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST" class="space-y-6">
+                <div>
+                    <label class="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Administrative ID</label>
+                    <input type="text" name="username" required placeholder="Username" 
+                        class="input-field w-full rounded-2xl px-7 py-4.5 text-lg font-medium">
+                </div>
+                
+                <div>
+                    <label class="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Security Key</label>
+                    <input type="password" name="password" required placeholder="Password" 
+                        class="input-field w-full rounded-2xl px-7 py-4.5 text-lg">
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" class="admin-btn w-full py-4.5 rounded-2xl font-black text-lg shadow-lg shadow-indigo-600/20">
+                        Sign In to Admin
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-10 text-center">
+                <a href="{{ url_for('index') }}" class="text-xs font-bold text-gray-400 hover:text-indigo-600 transition-all uppercase tracking-widest">
+                    ← Back to public site
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        gsap.to('.reveal', { 
+            opacity: 1, 
+            y: 0, 
+            duration: 1, 
+            ease: 'power3.out'
+        });
+    });
+</script>
+{% endblock %}

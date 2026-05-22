@@ -1,0 +1,93 @@
+.hotel-card-index {
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.hotel-card-index:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 40px 80px -15px rgba(0,0,0,0.12);
+}
+
+.hotel-card-index img {
+    transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hotel-card-index:hover img {
+    transform: scale(1.18);
+}
+
+/* Card Badges */
+.hotel-card-badge {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 1) !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1) !important;
+    border-radius: 0.5rem !important;
+    transform: translateZ(20px);
+}
+
+/* Live Cards - Search Results */
+.live-card {
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.live-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 40px 80px -15px rgba(0,0,0,0.12);
+}
+
+.live-card img {
+    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.live-card:hover img {
+    transform: scale(1.15);
+}
+
+/* Detail Page Cards */
+.detail-card {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+    border-radius: 0.75rem;
+}
+
+.luxury-shadow { 
+    box-shadow: 0 50px 100px -20px rgba(0,0,0,0.15), 0 30px 60px -30px rgba(0,0,0,0.2); 
+}
+
+/* Gallery Images */
+.gallery-img {
+    transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    border-radius: 0.75rem;
+}
+
+.gallery-img:hover {
+    transform: scale(1.1) rotate(1deg);
+}
+
+/* Filter Chips */
+.filter-chip {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    background: white;
+    border: 1px solid #f1f5f9;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-chip:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.filter-chip.active {
+    background: #6366f1;
+    border-color: #6366f1;
+    color: white;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+}

@@ -1,0 +1,81 @@
+/* Global Styles */
+body { 
+    font-family: 'Outfit', sans-serif; 
+    overflow-x: hidden; 
+    background-color: #f8fafc;
+}
+
+/* Glassmorphism Styles */
+.glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+.glass-dark {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Gradients */
+.luxury-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+}
+
+/* Common UI Elements */
+.btn-glow {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-glow:hover {
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn-glow::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg);
+    transition: 0.5s;
+}
+
+.btn-glow:hover::after {
+    left: 100%;
+}
+
+.transition-smooth { 
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+/* Premium Inputs (from Signin) */
+.premium-input {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+    color: white;
+    outline: none;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.premium-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+}
