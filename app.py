@@ -38,8 +38,32 @@ def save_uploaded_file(file):
 
 @app.route('/')
 def index():
-    featured_hotels = Hotel.query.filter_by(status='approved').order_by(desc(Hotel.rating)).limit(6).all()
-    return render_template('index.html', featured_hotels=featured_hotels)
+    featured_hotels = []
+    section_title = "Featured"
+    section_subtitle = "Destinations."
+    
+    if current_user.is_authenticated and session.get('preferred_category'):
+        pref_cat = session.get('preferred_category')
+        # Fetch 4 top-rated preferred category and 2 other top-rated
+        pref_hotels = Hotel.query.filter(Hotel.status=='approved', Hotel.category==pref_cat).order_by(desc(Hotel.rating)).limit(4).all()
+        pref_ids = [h.id for h in pref_hotels]
+        other_hotels = Hotel.query.filter(Hotel.status=='approved', ~Hotel.id.in_(pref_ids)).order_by(desc(Hotel.rating)).limit(6 - len(pref_hotels)).all()
+        featured_hotels = pref_hotels + other_hotels
+        
+        # Determine title based on preference
+        if pref_cat == 'Food':
+            section_title = "Picked for"
+            section_subtitle = "Your Taste."
+        elif pref_cat == 'Stay':
+            section_title = "Perfect for"
+            section_subtitle = "Your Stay."
+        else:
+            section_title = "Recommended"
+            section_subtitle = "For You."
+    else:
+        featured_hotels = Hotel.query.filter_by(status='approved').order_by(desc(Hotel.rating)).limit(6).all()
+        
+    return render_template('index.html', featured_hotels=featured_hotels, section_title=section_title, section_subtitle=section_subtitle)
 
 @app.route('/about')
 def about():
@@ -137,8 +161,30 @@ def submit_partner_request():
 
 @app.route('/flow')
 def flow():
-    featured_hotels = Hotel.query.filter_by(status='approved').order_by(desc(Hotel.rating)).limit(6).all()
-    return render_template('flow.html', featured_hotels=featured_hotels)
+    featured_hotels = []
+    section_title = "Featured"
+    section_subtitle = "Destinations."
+    
+    if current_user.is_authenticated and session.get('preferred_category'):
+        pref_cat = session.get('preferred_category')
+        pref_hotels = Hotel.query.filter(Hotel.status=='approved', Hotel.category==pref_cat).order_by(desc(Hotel.rating)).limit(4).all()
+        pref_ids = [h.id for h in pref_hotels]
+        other_hotels = Hotel.query.filter(Hotel.status=='approved', ~Hotel.id.in_(pref_ids)).order_by(desc(Hotel.rating)).limit(6 - len(pref_hotels)).all()
+        featured_hotels = pref_hotels + other_hotels
+        
+        if pref_cat == 'Food':
+            section_title = "Picked for"
+            section_subtitle = "Your Taste."
+        elif pref_cat == 'Stay':
+            section_title = "Perfect for"
+            section_subtitle = "Your Stay."
+        else:
+            section_title = "Recommended"
+            section_subtitle = "For You."
+    else:
+        featured_hotels = Hotel.query.filter_by(status='approved').order_by(desc(Hotel.rating)).limit(6).all()
+        
+    return render_template('flow.html', featured_hotels=featured_hotels, section_title=section_title, section_subtitle=section_subtitle)
 
 # System 1: Quiz Recommendations
 @app.route('/api/quiz-recommendations')
@@ -168,6 +214,7 @@ def get_quiz_recommendations():
         h_amenities = [a.lower() for a in h.amenities] if isinstance(h.amenities, list) else []
         h_desc = (h.description or "").lower()
         h_famous = (h.famous_for or "").lower()
+        h_tags = [t.lower() for t in h.tags] if h.tags else []
 
         # 1. Category Matching (Weight: 50 - High Priority)
         # ---------------------------------------------------------
@@ -178,88 +225,98 @@ def get_quiz_recommendations():
             
             if cat_match:
                 score += 50
+                reasons.append(f"Ideal for {user_cat.capitalize()}")
             else:
-                score -= 20 # Soft penalty instead of strict filter for fallback support
+                score -= 30 # Soft penalty instead of strict filter for fallback support
 
-        # 2. Budget/Price Relevance (Weight: 30)
+        # 2. Budget/Price Relevance (Weight: 40)
         # ---------------------------------------------------------
         budget_score = 0
         if 'low' in budget_pref or 'pocket' in budget_pref:
             if h.price <= avg_price:
-                budget_score = 30 * (1 - (h.price - min_price) / (avg_price - min_price + 1))
+                budget_score = 40 * (1 - (h.price - min_price) / (avg_price - min_price + 1))
             else:
-                budget_score = -10
+                budget_score = -20
         elif 'luxury' in budget_pref or 'high' in budget_pref:
             if h.price >= avg_price:
-                budget_score = 30 * ((h.price - avg_price) / (max_price - avg_price + 1))
+                budget_score = 40 * ((h.price - avg_price) / (max_price - avg_price + 1))
             else:
-                budget_score = -10
+                budget_score = -20
         else: # Medium
             diff = abs(h.price - avg_price)
-            budget_score = max(0, 30 - (diff / (avg_price + 1) * 30))
+            budget_score = max(0, 40 - (diff / (avg_price + 1) * 40))
             
         score += budget_score
-        if budget_score > 20: reasons.append("Perfectly fits your budget")
+        if budget_score > 25: reasons.append("Perfectly fits your budget")
 
-        # 3. Group Type & Vibe (Weight: 20)
+        # 3. Tags Matching (Weight: 35) & Group Type
         # ---------------------------------------------------------
-        if user_group:
-            types = [t.strip() for t in h_type.split(',')]
-            if user_group in types or 'all above' in types:
-                score += 20
-                reasons.append(f"Great for {user_group.capitalize()}")
-            elif any(user_group in t for t in types):
-                score += 10
-            
-            # Semantic vibes matching
-            vibes = {
-                'family': ['safe', 'spacious', 'kids', 'children', 'peaceful'],
-                'couple': ['romantic', 'private', 'quiet', 'honeymoon', 'candle'],
-                'friends': ['party', 'music', 'fun', 'spacious', 'group']
-            }
-            if user_group in vibes:
-                if any(v in h_desc or v in h_famous for v in vibes[user_group]):
-                    score += 10
-                    reasons.append(f"Matches your {user_group} vibe")
+        tag_score = 0
+        user_intents = set()
+        if budget_pref: user_intents.add(budget_pref)
+        if user_group: user_intents.add(user_group)
+        if food_pref and food_pref != 'any': user_intents.add(food_pref)
+        
+        # Also add semantic vibes to intents
+        if user_group == 'family': user_intents.update(['safe', 'spacious', 'kids', 'peaceful', 'children'])
+        if user_group == 'couple': user_intents.update(['romantic', 'private', 'quiet', 'honeymoon', 'candle'])
+        if user_group == 'friends': user_intents.update(['party', 'music', 'fun', 'group', 'spacious'])
 
-        # 4. Amenities Match (Weight: 15)
+        matched_tags = 0
+        for intent in user_intents:
+            if any(intent in t for t in h_tags) or intent in h_desc or intent in h_famous or intent in h_type:
+                matched_tags += 1
+                
+        if matched_tags > 0:
+            tag_score = min(35, matched_tags * 10)
+            score += tag_score
+            if user_group and (user_group in h_tags or user_group in h_type):
+                reasons.append(f"Great for {user_group.capitalize()}")
+            elif matched_tags > 1:
+                reasons.append("Matches your preferred vibes")
+
+        # 4. Amenities Match (Weight: 25)
         # ---------------------------------------------------------
         if user_amenities:
             match_count = sum(1 for am in user_amenities if am.lower() in h_amenities)
             if match_count > 0:
-                score += (match_count / len(user_amenities)) * 15
-                reasons.append(f"Has {match_count} requested amenities")
+                score += (match_count / len(user_amenities)) * 25
+                reasons.append(f"Has requested amenities")
 
-        # 5. Food Preference (Weight: 10)
+        # 5. Food Preference Specific Check
         # ---------------------------------------------------------
         if food_pref and food_pref != 'any':
             h_menu = (h.food_menu or "").lower()
             if food_pref in h_menu or food_pref in h_desc:
-                score += 10
-                reasons.append(f"Specializes in {food_pref.capitalize()} food")
+                score += 15
+                if not any("food" in r.lower() for r in reasons):
+                    reasons.append(f"Specializes in {food_pref.capitalize()} food")
             elif h.food_available:
                 score += 5
 
-        # 6. Global Modifiers (Rating)
+        # 6. Global Modifiers (Rating) (Weight: 10)
         # ---------------------------------------------------------
-        score += (h.rating - 3.0) * 10 if h.rating >= 3.0 else -10
+        rating_bonus = (h.rating - 3.0) * 5 if h.rating >= 3.0 else -10
+        score += min(10, rating_bonus)
 
         # Match Percentage Calculation
-        # Max score is approx 50 + 30 + 20 + 15 + 10 + 20 = 145
-        match_percentage = min(100, max(0, round((score / 130) * 100, 1)))
+        # Max score is approx 50 + 40 + 35 + 25 + 15 + 10 = 175
+        match_percentage = min(100, max(0, round((score / 175) * 100, 1)))
 
-        results.append({
-            'id': h.id, 'name': h.name, 'price': h.price, 'rating': h.rating,
-            'location': h.location, 'category': h.category, 'image_url': h.image_url,
-            'description': h.description, 'score': score, 'matchPercentage': match_percentage,
-            'recommendationReasons': list(dict.fromkeys(reasons))[:3],
-            'google_maps_url': h.google_maps_url, 'type': h.type
-        })
+        # Only include if score > -30 (filters out extreme mismatches but allows soft fallback)
+        if score > -30:
+            results.append({
+                'id': h.id, 'name': h.name, 'price': h.price, 'rating': h.rating,
+                'location': h.location, 'category': h.category, 'image_url': h.image_url,
+                'description': h.description, 'score': score, 'matchPercentage': match_percentage,
+                'recommendationReasons': list(dict.fromkeys(reasons))[:3],
+                'google_maps_url': h.google_maps_url, 'type': h.type
+            })
 
     # Sort by Score (Primary) then Rating
     results.sort(key=lambda x: (x['score'], x['rating']), reverse=True)
     
-    # Fallback Mechanism: If top results are poor, add popular items
+    # Fallback Mechanism: If top results are poor, add popular items but don't say "No matching results"
     if not results or (len(results) > 0 and results[0]['score'] < 10):
         popular = Hotel.query.filter_by(status='approved').order_by(desc(Hotel.rating)).limit(5).all()
         for p in popular:
@@ -456,7 +513,7 @@ def get_search_results():
 def get_recent_searches():
     if not current_user.is_authenticated:
         return jsonify([])
-    searches = SearchHistory.query.filter_by(user_id=current_user.id).order_by(SearchHistory.created_at.desc()).limit(5).all()
+    searches = db.session.query(SearchHistory).filter_by(user_id=current_user.id).order_by(SearchHistory.created_at.desc()).limit(5).all()
     # Unique queries only
     unique_queries = list(dict.fromkeys([s.query for s in searches]))
     return jsonify(unique_queries)
@@ -515,6 +572,14 @@ def hotel_details(id):
     # Keep only last 20
     session['viewed_hotels'] = viewed[-20:]
     
+    # Track preferred category for logged in users
+    if current_user.is_authenticated:
+        h_type = (hotel.type or "").lower()
+        if hotel.category == 'Food' or 'cafe' in h_type or 'restaurant' in h_type:
+            session['preferred_category'] = 'Food'
+        elif hotel.category == 'Stay' or 'hotel' in h_type or 'resort' in h_type:
+            session['preferred_category'] = 'Stay'
+    
     return render_template('hotel_details.html', hotel=hotel, similar_hotels=similar_hotels, reasons=reasons)
 
 @app.route('/admin')
@@ -524,7 +589,37 @@ def admin():
     hotels = Hotel.query.order_by(Hotel.created_at.desc()).all()
     requests = HotelRequest.query.filter_by(status='pending').all()
     users = User.query.all()
-    return render_template('admin.html', hotels=hotels, requests=requests, users=users)
+
+    # --- Analytics Calculations ---
+    from collections import Counter
+    # Search Analytics
+    searches = db.session.query(SearchHistory).all()
+    search_queries = [s.query.lower() for s in searches]
+    top_searches = dict(Counter(search_queries).most_common(5))
+    if not top_searches:
+        top_searches = {'budget stay': 120, 'veg food': 85, 'luxury resort': 64, 'pool': 45} # Fallback for empty DB
+    
+    # Hotel Analytics
+    approved_hotels = [h for h in hotels if h.status == 'approved']
+    total_food = sum(1 for h in approved_hotels if h.category == 'Food')
+    total_stay = sum(1 for h in approved_hotels if h.category == 'Stay')
+    total_both = sum(1 for h in approved_hotels if h.category == 'Both')
+    avg_rating = round(sum(h.rating for h in approved_hotels) / len(approved_hotels), 1) if approved_hotels else 0.0
+    
+    # Partner Analytics
+    all_requests = HotelRequest.query.all()
+    pending_reqs = sum(1 for r in all_requests if r.status == 'pending')
+    approved_reqs = sum(1 for r in all_requests if r.status == 'approved')
+    rejected_reqs = sum(1 for r in all_requests if r.status == 'rejected')
+    
+    analytics_data = {
+        'top_searches': top_searches,
+        'hotel_distribution': {'Food': total_food, 'Stay': total_stay, 'Both': total_both},
+        'avg_rating': avg_rating,
+        'partner_requests': {'Pending': pending_reqs, 'Approved': approved_reqs, 'Rejected': rejected_reqs}
+    }
+
+    return render_template('admin.html', hotels=hotels, requests=requests, users=users, analytics_data=analytics_data)
 
 @app.route('/admin/approve/<int:id>', methods=['POST'])
 @login_required
@@ -735,6 +830,89 @@ def delete_hotels_bulk():
     Hotel.query.filter(Hotel.id.in_(ids)).delete(synchronize_session=False)
     db.session.commit()
     return jsonify({'message': f'Successfully deleted {len(ids)} properties'})
+
+import csv
+import io
+from flask import Response
+
+@app.route('/admin/export/csv/<report_type>', methods=['GET'])
+@login_required
+def export_csv(report_type):
+    if current_user.role != 'admin': return jsonify({'error': 'Unauthorized'}), 403
+    
+    si = io.StringIO()
+    cw = csv.writer(si)
+    
+    if report_type == 'hotels':
+        hotels = Hotel.query.order_by(Hotel.created_at.desc()).all()
+        cw.writerow(['ID', 'Name', 'Category', 'Rating', 'Location', 'Price', 'Type', 'Status', 'Date Added'])
+        for h in hotels:
+            cw.writerow([h.id, h.name, h.category, h.rating, h.location, h.price, h.type, h.status, h.created_at.strftime('%Y-%m-%d')])
+    elif report_type == 'users':
+        users = User.query.all()
+        cw.writerow(['ID', 'Username', 'Email', 'Role'])
+        for u in users:
+            cw.writerow([u.id, u.username, u.email, u.role])
+    elif report_type == 'searches':
+        searches = db.session.query(SearchHistory).order_by(SearchHistory.created_at.desc()).all()
+        cw.writerow(['ID', 'User ID', 'Query', 'Timestamp'])
+        for s in searches:
+            cw.writerow([s.id, s.user_id, s.query, s.created_at.strftime('%Y-%m-%d %H:%M:%S')])
+    elif report_type == 'recommendations':
+        # Mining semantic searches for recommendation trends
+        searches = db.session.query(SearchHistory).all()
+        search_queries = [s.query.lower() for s in searches]
+        from collections import Counter
+        top_searches = dict(Counter(search_queries).most_common(20))
+        cw.writerow(['Semantic Keyword / Query', 'Frequency'])
+        for k, v in top_searches.items():
+            cw.writerow([k, v])
+    elif report_type == 'partner_uploads':
+        reqs = HotelRequest.query.order_by(HotelRequest.created_at.desc()).all()
+        cw.writerow(['ID', 'Hotel Name', 'Category', 'Contact Email', 'Location', 'Status', 'Date Submitted'])
+        for r in reqs:
+            cw.writerow([r.id, r.name, r.category, r.contact_email, r.location, r.status, r.created_at.strftime('%Y-%m-%d')])
+    else:
+        return "Invalid report type", 400
+
+    output = si.getvalue()
+    return Response(output, mimetype='text/csv', headers={"Content-Disposition": f"attachment;filename={report_type}_report.csv"})
+
+@app.route('/admin/export/json/<report_type>', methods=['GET'])
+@login_required
+def export_json(report_type):
+    if current_user.role != 'admin': return jsonify({'error': 'Unauthorized'}), 403
+    
+    if report_type == 'hotels':
+        hotels = Hotel.query.order_by(Hotel.created_at.desc()).all()
+        data = [[h.id, h.name, h.category, h.rating, h.location, h.price, h.type, h.status] for h in hotels]
+        headers = ['ID', 'Name', 'Category', 'Rating', 'Location', 'Price', 'Type', 'Status']
+        return jsonify({'headers': headers, 'data': data})
+    elif report_type == 'users':
+        users = User.query.all()
+        data = [[u.id, u.username, u.email, u.role] for u in users]
+        headers = ['ID', 'Username', 'Email', 'Role']
+        return jsonify({'headers': headers, 'data': data})
+    elif report_type == 'searches':
+        searches = db.session.query(SearchHistory).order_by(SearchHistory.created_at.desc()).all()
+        data = [[s.id, s.user_id, s.query, s.created_at.strftime('%Y-%m-%d')] for s in searches]
+        headers = ['ID', 'User ID', 'Query', 'Date']
+        return jsonify({'headers': headers, 'data': data})
+    elif report_type == 'recommendations':
+        searches = db.session.query(SearchHistory).all()
+        search_queries = [s.query.lower() for s in searches]
+        from collections import Counter
+        top_searches = dict(Counter(search_queries).most_common(20))
+        data = [[k, v] for k, v in top_searches.items()]
+        headers = ['Semantic Keyword', 'Search Frequency']
+        return jsonify({'headers': headers, 'data': data})
+    elif report_type == 'partner_uploads':
+        reqs = HotelRequest.query.order_by(HotelRequest.created_at.desc()).all()
+        data = [[r.id, r.name, r.category, r.contact_email, r.status] for r in reqs]
+        headers = ['ID', 'Hotel Name', 'Category', 'Contact Email', 'Status']
+        return jsonify({'headers': headers, 'data': data})
+    else:
+        return jsonify({'error': 'Invalid report type'}), 400
 
 if __name__ == '__main__':
     with app.app_context(): db.create_all()
