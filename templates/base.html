@@ -40,9 +40,11 @@
                 <a href="/signin" class="hover:text-white transition-smooth">Sign In</a>
             {% endif %}
         </div>
+        {% if request.path == '/' %}
         <a href="/partner" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg text-sm font-semibold transition-smooth btn-glow">
             Partner With Us
         </a>
+        {% endif %}
     </nav>
 
     <main>
