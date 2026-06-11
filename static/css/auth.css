@@ -5,9 +5,40 @@
     align-items: center;
     justify-content: center;
     padding-top: 8rem;
+    padding-bottom: 8rem;
     padding-left: 1rem;
     padding-right: 1rem;
 }
+
+/* Input Validation States */
+.premium-input.is-invalid, 
+.is-invalid-field {
+    border-color: #fca5a5 !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+    background-color: rgba(239, 68, 68, 0.05) !important;
+}
+
+.premium-input.is-valid,
+.is-valid-field {
+    border-color: #86efac !important;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2) !important;
+    background-color: rgba(34, 197, 94, 0.05) !important;
+}
+
+.validation-error {
+    color: #fca5a5;
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
+    margin-left: 0.25rem;
+    display: block;
+    animation: authErrorFadeIn 0.3s ease-in-out;
+}
+
+@keyframes authErrorFadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 
 .glass-auth-card {
     background: rgba(255, 255, 255, 0.1);

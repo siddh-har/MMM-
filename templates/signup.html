@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="min-h-screen flex items-center justify-center luxury-gradient pt-32 px-4 relative overflow-hidden">
+<section class="min-h-screen flex items-center justify-center luxury-gradient pt-32 pb-32 px-4 relative overflow-hidden">
 
     <!-- Ambient Glow -->
     <div class="absolute top-[-120px] left-[-120px] w-[420px] h-[420px] bg-purple-500/20 blur-[120px] rounded-full"></div>
@@ -29,7 +29,7 @@
           {% endif %}
         {% endwith %}
 
-        <form action="/signup" method="POST" class="space-y-6">
+        <form id="signup-form" action="/signup" method="POST" class="space-y-6" novalidate>
 
             <div>
                 <label class="block text-sm font-semibold mb-2 ml-1 text-white/90">
@@ -38,12 +38,13 @@
 
                 <input
                     type="text"
+                    id="signup-username"
                     name="username"
                     required
                     placeholder="Choose a username"
-
                     class="w-full bg-white/10 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-white/35 backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400 focus:bg-white/15"
                 >
+                <span id="signup-username-error" class="validation-error"></span>
             </div>
 
             <div>
@@ -53,12 +54,13 @@
 
                 <input
                     type="email"
+                    id="signup-email"
                     name="email"
                     required
                     placeholder="Email address"
-
                     class="w-full bg-white/10 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-white/35 backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400 focus:bg-white/15"
                 >
+                <span id="signup-email-error" class="validation-error"></span>
             </div>
 
             <div>
@@ -68,23 +70,226 @@
 
                 <input
                     type="password"
+                    id="signup-password"
                     name="password"
                     required
                     placeholder="••••••••"
-
                     class="w-full bg-white/10 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-white/35 backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400 focus:bg-white/15"
                 >
+                <span id="signup-password-error" class="validation-error"></span>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-2 ml-1 text-white/90">
+                    Confirm Password
+                </label>
+
+                <input
+                    type="password"
+                    id="signup-confirm-password"
+                    name="confirm_password"
+                    required
+                    placeholder="••••••••"
+                    class="w-full bg-white/10 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder-white/35 backdrop-blur-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-400 focus:bg-white/15"
+                >
+                <span id="signup-confirm-password-error" class="validation-error"></span>
             </div>
 
             <button
                 type="submit"
-
-                class="w-full py-4 rounded-2xl font-bold text-white text-lg bg-gradient-to-r from-purple-500 to-pink-500 shadow-xl shadow-purple-500/30 hover:scale-[1.02] hover:shadow-purple-500/40 transition-all duration-300"
+                id="signup-submit-btn"
+                class="w-full py-4 rounded-2xl font-bold text-white text-lg bg-gradient-to-r from-purple-500 to-pink-500 shadow-xl shadow-purple-500/30 hover:scale-[1.02] hover:shadow-purple-500/40 transition-all duration-300 flex justify-center items-center gap-3"
             >
-                Create Account
+                <span>Create Account</span>
             </button>
 
         </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('signup-form');
+                const usernameInput = document.getElementById('signup-username');
+                const emailInput = document.getElementById('signup-email');
+                const passwordInput = document.getElementById('signup-password');
+                const confirmInput = document.getElementById('signup-confirm-password');
+                const submitBtn = document.getElementById('signup-submit-btn');
+
+                let emailIsValidating = false;
+                let emailCheckTimeout = null;
+
+                function showError(input, errorElId, msg) {
+                    input.classList.remove('is-valid-field');
+                    input.classList.add('is-invalid-field');
+                    const errorEl = document.getElementById(errorElId);
+                    errorEl.textContent = msg;
+                    errorEl.style.display = 'block';
+                }
+
+                function showSuccess(input, errorElId) {
+                    input.classList.remove('is-invalid-field');
+                    input.classList.add('is-valid-field');
+                    const errorEl = document.getElementById(errorElId);
+                    errorEl.textContent = '';
+                    errorEl.style.display = 'none';
+                }
+
+                function clearStatus(input, errorElId) {
+                    input.classList.remove('is-invalid-field', 'is-valid-field');
+                    const errorEl = document.getElementById(errorElId);
+                    errorEl.textContent = '';
+                    errorEl.style.display = 'none';
+                }
+
+                // Username Validation
+                function validateUsername() {
+                    const val = usernameInput.value.trim();
+                    if (val.length === 0) {
+                        showError(usernameInput, 'signup-username-error', 'Username is required.');
+                        return false;
+                    }
+                    if (val.length < 3) {
+                        showError(usernameInput, 'signup-username-error', 'Username must be at least 3 characters.');
+                        return false;
+                    }
+                    showSuccess(usernameInput, 'signup-username-error');
+                    return true;
+                }
+
+                // Password Validation
+                function validatePassword() {
+                    const val = passwordInput.value;
+                    if (val.length === 0) {
+                        showError(passwordInput, 'signup-password-error', 'Password is required.');
+                        return false;
+                    }
+                    if (val.length < 6) {
+                        showError(passwordInput, 'signup-password-error', 'Password must be at least 6 characters.');
+                        return false;
+                    }
+                    showSuccess(passwordInput, 'signup-password-error');
+                    // Re-validate confirm password if it contains text
+                    if (confirmInput.value.length > 0) {
+                        validateConfirmPassword();
+                    }
+                    return true;
+                }
+
+                // Confirm Password Validation
+                function validateConfirmPassword() {
+                    const passVal = passwordInput.value;
+                    const confirmVal = confirmInput.value;
+                    if (confirmVal.length === 0) {
+                        showError(confirmInput, 'signup-confirm-password-error', 'Please confirm your password.');
+                        return false;
+                    }
+                    if (passVal !== confirmVal) {
+                        showError(confirmInput, 'signup-confirm-password-error', 'Passwords do not match.');
+                        return false;
+                    }
+                    showSuccess(confirmInput, 'signup-confirm-password-error');
+                    return true;
+                }
+
+                // Email Validation (Regex + Async Domain Resolution)
+                async function validateEmail(isSubmit = false) {
+                    const val = emailInput.value.trim();
+                    if (val.length === 0) {
+                        showError(emailInput, 'signup-email-error', 'Email is required.');
+                        return false;
+                    }
+                    
+                    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!emailRegex.test(val)) {
+                        showError(emailInput, 'signup-email-error', 'Invalid email format.');
+                        return false;
+                    }
+
+                    if (!isSubmit) {
+                        // Debounce DNS check during typing
+                        clearTimeout(emailCheckTimeout);
+                        return new Promise((resolve) => {
+                            emailCheckTimeout = setTimeout(async () => {
+                                const ok = await performDnsCheck(val);
+                                resolve(ok);
+                            }, 500);
+                        });
+                    } else {
+                        return await performDnsCheck(val);
+                    }
+                }
+
+                async function performDnsCheck(email) {
+                    emailIsValidating = true;
+                    const errorEl = document.getElementById('signup-email-error');
+                    errorEl.textContent = 'Verifying email...';
+                    errorEl.style.color = '#cbd5e1';
+                    errorEl.style.display = 'block';
+
+                    try {
+                        const res = await fetch('/api/validate-email', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ email: email })
+                        });
+                        const data = await res.json();
+                        emailIsValidating = false;
+                        errorEl.style.color = '#fca5a5'; // Reset to red error style
+
+                        if (data.valid) {
+                            showSuccess(emailInput, 'signup-email-error');
+                            return true;
+                        } else {
+                            showError(emailInput, 'signup-email-error', data.message || 'Email domain is invalid.');
+                            return false;
+                        }
+                    } catch (err) {
+                        emailIsValidating = false;
+                        errorEl.style.color = '#fca5a5';
+                        // Fallback in case of server/network issue
+                        showSuccess(emailInput, 'signup-email-error');
+                        return true;
+                    }
+                }
+
+                // Event Listeners
+                usernameInput.addEventListener('input', validateUsername);
+                passwordInput.addEventListener('input', validatePassword);
+                confirmInput.addEventListener('input', validateConfirmPassword);
+                emailInput.addEventListener('input', () => validateEmail(false));
+
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const uOk = validateUsername();
+                    const pOk = validatePassword();
+                    const cOk = validateConfirmPassword();
+                    
+                    // Show spinner / loading state
+                    submitBtn.disabled = true;
+                    const origBtnHtml = submitBtn.innerHTML;
+                    submitBtn.innerHTML = `
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Verifying account details...</span>
+                    `;
+
+                    const eOk = await validateEmail(true);
+
+                    if (uOk && pOk && cOk && eOk) {
+                        form.submit();
+                    } else {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = origBtnHtml;
+                        // Focus first invalid element
+                        const firstInvalid = form.querySelector('.is-invalid-field');
+                        if (firstInvalid) firstInvalid.focus();
+                    }
+                });
+            });
+        </script>
+
 
         <p class="text-center mt-8 text-white/50 text-sm">
             Already have an account?

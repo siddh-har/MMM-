@@ -4,6 +4,8 @@ from models import db, Hotel, HotelRequest, User, SearchHistory
 from sqlalchemy import or_, and_, desc
 import os
 from datetime import datetime
+import re
+import socket
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key-make-my-moment'
@@ -42,26 +44,103 @@ def index():
     section_title = "Featured"
     section_subtitle = "Destinations."
     
-    if current_user.is_authenticated and session.get('preferred_category'):
-        pref_cat = session.get('preferred_category')
-        # Fetch 4 top-rated preferred category and 2 other top-rated
-        pref_hotels = Hotel.query.filter(Hotel.status=='approved', Hotel.category==pref_cat).order_by(desc(Hotel.rating)).limit(4).all()
-        pref_ids = [h.id for h in pref_hotels]
-        other_hotels = Hotel.query.filter(Hotel.status=='approved', ~Hotel.id.in_(pref_ids)).order_by(desc(Hotel.rating)).limit(6 - len(pref_hotels)).all()
-        featured_hotels = pref_hotels + other_hotels
+    if current_user.is_authenticated:
+        # Get user's recent search history (up to 10 searches)
+        recent_searches = db.session.query(SearchHistory).filter_by(user_id=current_user.id).order_by(desc(SearchHistory.created_at)).limit(10).all()
         
-        # Determine title based on preference
-        if pref_cat == 'Food':
-            section_title = "Picked for"
-            section_subtitle = "Your Taste."
-        elif pref_cat == 'Stay':
-            section_title = "Perfect for"
-            section_subtitle = "Your Stay."
-        else:
+        if recent_searches:
+            # Content-based recommendation algorithm
+            all_hotels = Hotel.query.filter_by(status='approved').all()
+            scored_hotels = []
+            
+            search_queries = [s.query.lower().strip() for s in recent_searches if s.query.strip()]
+            
+            for h in all_hotels:
+                score = 0.0
+                
+                h_name = h.name.lower()
+                h_cat = (h.category or "").lower()
+                h_loc = h.location.lower()
+                h_desc = (h.description or "").lower()
+                h_famous = (h.famous_for or "").lower()
+                h_tags = [t.lower() for t in h.tags] if h.tags else []
+                h_type = (h.type or "").lower()
+                
+                # Score against each historical search term, applying recency weight
+                for idx, term in enumerate(search_queries):
+                    recency_weight = 1.0 / (idx + 1)
+                    
+                    term_score = 0
+                    if term == h_name:
+                        term_score += 150
+                    elif term in h_name:
+                        term_score += 80
+                        
+                    if term in h_cat:
+                        term_score += 50
+                    if term in h_loc:
+                        term_score += 60
+                    if term in h_desc:
+                        term_score += 30
+                    if term in h_famous:
+                        term_score += 40
+                    if term in h_type:
+                        term_score += 40
+                        
+                    for tag in h_tags:
+                        if term in tag or tag in term:
+                            term_score += 40
+                            
+                    # Token matching for multi-word queries
+                    words = term.split()
+                    if len(words) > 1:
+                        for word in words:
+                            if word in ['stay', 'food', 'hotel', 'cafe', 'restaurant', 'in', 'near', 'the', 'and']:
+                                continue
+                            if word in h_name:
+                                term_score += 20
+                            if word in h_loc:
+                                term_score += 20
+                            if word in h_desc or word in h_famous:
+                                term_score += 10
+                                
+                    score += term_score * recency_weight
+                
+                # Quality boost (incorporate hotel rating)
+                score += (h.rating or 0.0) * 10
+                
+                # Category bias boost based on current session
+                pref_cat = session.get('preferred_category')
+                if pref_cat and h.category == pref_cat:
+                    score += 30
+                    
+                scored_hotels.append((h, score))
+                
+            # Sort hotels by their recommendation scores descending
+            scored_hotels.sort(key=lambda x: x[1], reverse=True)
+            featured_hotels = [item[0] for item in scored_hotels[:6]]
             section_title = "Recommended"
             section_subtitle = "For You."
+        else:
+            # Fallback to session preferred category if no search history yet
+            pref_cat = session.get('preferred_category')
+            if pref_cat:
+                pref_hotels = Hotel.query.filter(Hotel.status=='approved', Hotel.category==pref_cat).order_by(desc(Hotel.rating)).limit(4).all()
+                pref_ids = [h.id for h in pref_hotels]
+                other_hotels = Hotel.query.filter(Hotel.status=='approved', ~Hotel.id.in_(pref_ids)).order_by(desc(Hotel.rating)).limit(6 - len(pref_hotels)).all()
+                featured_hotels = pref_hotels + other_hotels
+                
+                if pref_cat == 'Food':
+                    section_title = "Picked for"
+                    section_subtitle = "Your Taste."
+                elif pref_cat == 'Stay':
+                    section_title = "Perfect for"
+                    section_subtitle = "Your Stay."
+            else:
+                featured_hotels = Hotel.query.filter_by(status='approved').order_by(desc(Hotel.rating)).limit(6).all()
     else:
         featured_hotels = Hotel.query.filter_by(status='approved').order_by(desc(Hotel.rating)).limit(6).all()
+
         
     return render_template('index.html', featured_hotels=featured_hotels, section_title=section_title, section_subtitle=section_subtitle)
 
@@ -77,9 +156,34 @@ def signup():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # Check password matching
+        if password != confirm_password:
+            flash('Passwords do not match')
+            return redirect(request.referrer or url_for('signup'))
+            
+        # Email format and domain validation
+        EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not email or not re.match(EMAIL_REGEX, email):
+            flash('Invalid email format')
+            return redirect(request.referrer or url_for('signup'))
+            
+        try:
+            domain = email.split('@')[-1]
+            socket.gethostbyname(domain)
+        except Exception:
+            flash('Email domain does not exist or is unreachable')
+            return redirect(request.referrer or url_for('signup'))
+            
         if User.query.filter_by(username=username).first():
             flash('Username already exists')
-            return redirect(url_for('signup'))
+            return redirect(request.referrer or url_for('signup'))
+            
+        if User.query.filter_by(email=email).first():
+            flash('Email address is already registered')
+            return redirect(request.referrer or url_for('signup'))
+            
         new_user = User(username=username, email=email)
         new_user.set_password(password)
         if User.query.count() == 0:
@@ -89,6 +193,31 @@ def signup():
         login_user(new_user)
         return redirect(url_for('index'))
     return render_template('signup.html')
+
+@app.route('/api/validate-email', methods=['POST'])
+def validate_email_api():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip()
+    
+    if not email:
+        return jsonify({'valid': False, 'message': 'Email is required.'}), 400
+        
+    EMAIL_REGEX = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(EMAIL_REGEX, email):
+        return jsonify({'valid': False, 'message': 'Invalid email format.'})
+        
+    try:
+        domain = email.split('@')[-1]
+        socket.gethostbyname(domain)
+        
+        # Check if email is already in the database
+        if User.query.filter_by(email=email).first():
+            return jsonify({'valid': False, 'message': 'Email address is already registered.'})
+            
+        return jsonify({'valid': True})
+    except Exception:
+        return jsonify({'valid': False, 'message': 'Email domain does not exist or is unreachable.'})
+
 
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
@@ -137,12 +266,12 @@ def submit_partner_request():
     
     # Handle Image Upload
     image_url = 'https://images.unsplash.com/photo-1566073771259-6a8506099945'
-    image_file = request.files.get('image_file')
+    image_file = request.files.get('image_file')  # type: ignore
     if image_file:
         saved_path = save_uploaded_file(image_file)
         if saved_path: image_url = saved_path
 
-    new_request = HotelRequest(
+    new_request = HotelRequest(  # type: ignore
         name=data.get('hotel_name'),
         location=data.get('location'),
         contact_email=data.get('contact_email'),
@@ -188,6 +317,24 @@ def flow():
         
     return render_template('flow.html', featured_hotels=featured_hotels, section_title=section_title, section_subtitle=section_subtitle)
 
+def is_non_veg_hotel(h):
+    h_name = h.name.lower()
+    h_desc = (h.description or "").lower()
+    h_famous = (h.famous_for or "").lower()
+    h_menu = (h.food_menu or "").lower()
+    h_type = (h.type or "").lower()
+    h_tags = [t.lower() for t in h.tags] if h.tags else []
+    h_amenities = [a.lower() for a in h.amenities] if h.amenities else []
+    
+    non_veg_keywords = ['non-veg', 'non veg', 'nonveg', 'mutton', 'chicken', 'fish', 'meat', 'tambda', 'pandhra', 'steak', 'grill']
+    
+    for kw in non_veg_keywords:
+        if kw in h_name or kw in h_desc or kw in h_famous or kw in h_menu or kw in h_type:
+            return True
+        if any(kw in tag for tag in h_tags) or any(kw in am for am in h_amenities):
+            return True
+    return False
+
 # System 1: Quiz Recommendations
 @app.route('/api/quiz-recommendations')
 def get_quiz_recommendations():
@@ -208,6 +355,10 @@ def get_quiz_recommendations():
 
     results = []
     for h in all_hotels:
+        # Strict veg filter
+        if food_pref == 'veg' and is_non_veg_hotel(h):
+            continue
+            
         score = 0
         reasons = []
         
@@ -296,6 +447,11 @@ def get_quiz_recommendations():
             elif h.food_available:
                 score += 5
 
+        # Boost non-veg if food preference is non-veg
+        if (food_pref == 'non-veg' or food_pref == 'non veg' or food_pref == 'nonveg') and is_non_veg_hotel(h):
+            score += 2000
+            reasons.append("Matches your Non-Veg food preference")
+
         # 6. Global Modifiers (Rating) (Weight: 10)
         # ---------------------------------------------------------
         rating_bonus = (h.rating - 3.0) * 5 if h.rating >= 3.0 else -10
@@ -366,12 +522,22 @@ def get_search_results():
         if any(s in query for s in synonyms):
             active_intents[intent] = True
 
+    is_non_veg_search = False
+    is_veg_search = False
+    if 'non-veg' in query or 'non veg' in query or 'nonveg' in query:
+        is_non_veg_search = True
+    elif 'veg' in query or 'vegetarian' in query or 'pure veg' in query:
+        is_veg_search = True
+
     # 3. Search & Scoring (Goal 5)
     hotels = Hotel.query.filter_by(status='approved').all()
     results = []
     exact_match_hotel = None
 
     for h in hotels:
+        if is_veg_search and is_non_veg_hotel(h):
+            continue
+            
         score = 0
         reasons = []
         h_name, h_cat = h.name.lower(), (h.category or "").lower()
@@ -441,6 +607,11 @@ def get_search_results():
 
         # E. Global Modifiers (Rating)
         score += (h.rating - 3.0) * 100
+
+        # Boost non-veg if search query is non-veg
+        if is_non_veg_search and is_non_veg_hotel(h):
+            score += 2000
+            reasons.append("Matches your Non-Veg search")
 
         if score > 150:
             match_percentage = min(100, round((score / 800) * 100, 1)) if score < 1500 else 100

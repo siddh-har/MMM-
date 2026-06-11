@@ -24,12 +24,14 @@
 <body class="bg-gray-50 text-gray-900">
     <!-- Sticky Navbar -->
     <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-500 py-6 px-6 md:py-10 md:px-16 flex justify-between items-center bg-transparent border-b border-transparent">
+        {% if request.path not in ['/signin', '/signup'] %}
         <div class="text-3xl md:text-4xl font-bold tracking-tight text-white z-50">
             <a href="/">Make My <span class="text-indigo-400">Moment</span></a>
         </div>
+        {% endif %}
         
         <!-- Desktop Menu -->
-        <div class="hidden md:flex gap-14 text-lg font-semibold text-white/90">
+        <div class="hidden md:flex gap-14 text-lg font-semibold text-white/90 {% if request.path in ['/signin', '/signup'] %}mx-auto{% endif %}">
             <a href="/" class="hover:text-white transition-smooth">Home</a>
             <a href="/about" class="hover:text-white transition-smooth">About</a>
 
@@ -44,7 +46,7 @@
         </div>
 
         <!-- Action Buttons (Desktop / Mobile view) -->
-        <div class="flex items-center gap-4 z-50">
+        <div class="flex items-center gap-4 z-50 {% if request.path in ['/signin', '/signup'] %}ml-auto md:ml-0{% endif %}">
             {% if request.path == '/' %}
             <a href="/partner" class="hidden md:inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-9 py-4 rounded-xl text-base font-bold transition-smooth btn-glow">
                 Partner With Us

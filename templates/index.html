@@ -57,10 +57,10 @@
         </p>
 
         <!-- Unified Search Bar -->
-        <div id="search-bar-container" class="relative max-w-3xl mx-auto opacity-0 translate-y-10 group">
+        <div id="search-bar-container" class="relative max-w-3xl mx-auto opacity-0 translate-y-10 group z-50">
             <div class="glass-search p-2.5 rounded-2xl flex items-center gap-2 border-white/20 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.5)] transition-smooth hover:border-white/40">
                 <div class="flex-1 relative">
-                    <input type="text" id="hotel-search" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter') triggerFind()" placeholder="Search hotels, cafes, restaurants, resorts..." class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-white/30 px-10 py-6 text-xl font-medium" autocomplete="off">
+                    <input type="text" id="hotel-search" onfocus="handleSearchFocus()" oninput="handleSearch(this.value)" onkeydown="if(event.key==='Enter') triggerFind()" placeholder="Search hotels, cafes, restaurants, resorts..." class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-white/30 px-10 py-6 text-xl font-medium" autocomplete="off">
                 </div>
                 <button onclick="triggerFind()" class="bg-indigo-600 hover:bg-indigo-700 text-white p-6 rounded-full transition-smooth shadow-lg shadow-indigo-600/30 transform hover:scale-105 active:scale-95">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -218,6 +218,31 @@
             if (chip.dataset.filter === filter) chip.classList.add('active');
         });
         triggerFind();
+    }
+
+    async function handleSearchFocus() {
+        const val = document.getElementById('hotel-search').value.trim();
+        if (val.length === 0) {
+            const res = await fetch('/api/recent-searches');
+            const searches = await res.json();
+            const suggestionsDiv = document.getElementById('suggestions');
+            if (searches.length > 0) {
+                suggestionsDiv.innerHTML = `
+                    <div class="px-10 py-5 text-xs font-bold uppercase tracking-widest text-indigo-400 border-b border-white/5">
+                        🔍 Recent Searches
+                    </div>
+                    ${searches.map(s => `
+                        <div onclick="showImmediateResult('${s.replace(/'/g, "\\'")}')" class="px-10 py-5 cursor-pointer hover:bg-white/10 border-b border-white/5 last:border-0 flex justify-between items-center group">
+                            <span class="text-white/80 group-hover:text-white font-medium">${s}</span>
+                            <span class="text-indigo-400 text-xs font-bold opacity-0 group-hover:opacity-100 transition-smooth">Search again →</span>
+                        </div>
+                    `).join('')}
+                `;
+                suggestionsDiv.classList.remove('hidden');
+            } else {
+                suggestionsDiv.classList.add('hidden');
+            }
+        }
     }
 
     async function handleSearch(val, suggestionsId = 'suggestions') {
@@ -398,6 +423,15 @@
         gsap.to('.featured-text', { scrollTrigger: '#hotels-section', opacity: 1, x: 0, duration: 1 });
         gsap.to('.hotel-card-index', { scrollTrigger: '#hotels-section', opacity: 1, y: 0, duration: 1, stagger: 0.2 });
         fetchRecentSearches();
+
+        // Close search suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('search-bar-container');
+            const suggestions = document.getElementById('suggestions');
+            if (container && suggestions && !container.contains(e.target)) {
+                suggestions.classList.add('hidden');
+            }
+        });
     });
 
     // Quick Quiz Logic

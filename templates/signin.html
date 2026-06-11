@@ -51,21 +51,29 @@
                 <p class="text-white/60">Join the premium community</p>
             </div>
 
-            <form action="/signup" method="POST" class="space-y-6">
+            <form id="toggle-signup-form" action="/signup" method="POST" class="space-y-6" novalidate>
                 <div>
                     <label class="auth-label">Username</label>
-                    <input type="text" name="username" required placeholder="Choose a username" class="premium-input transition-smooth">
+                    <input type="text" id="toggle-signup-username" name="username" required placeholder="Choose a username" class="premium-input transition-smooth">
+                    <span id="toggle-username-error" class="validation-error"></span>
                 </div>
                 <div>
                     <label class="auth-label">Email Address</label>
-                    <input type="email" name="email" required placeholder="name@example.com" class="premium-input transition-smooth">
+                    <input type="email" id="toggle-signup-email" name="email" required placeholder="name@example.com" class="premium-input transition-smooth">
+                    <span id="toggle-email-error" class="validation-error"></span>
                 </div>
                 <div>
                     <label class="auth-label">Password</label>
-                    <input type="password" name="password" required placeholder="••••••••" class="premium-input transition-smooth">
+                    <input type="password" id="toggle-signup-password" name="password" required placeholder="••••••••" class="premium-input transition-smooth">
+                    <span id="toggle-password-error" class="validation-error"></span>
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-smooth shadow-lg shadow-indigo-600/20">
-                    Create Account
+                <div>
+                    <label class="auth-label">Confirm Password</label>
+                    <input type="password" id="toggle-signup-confirm-password" name="confirm_password" required placeholder="••••••••" class="premium-input transition-smooth">
+                    <span id="toggle-confirm-password-error" class="validation-error"></span>
+                </div>
+                <button type="submit" id="toggle-signup-submit-btn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-smooth shadow-lg shadow-indigo-600/20 flex justify-center items-center gap-3">
+                    <span>Create Account</span>
                 </button>
             </form>
             
@@ -78,6 +86,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </section>
 
@@ -99,5 +108,179 @@
             gsap.fromTo(target, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 });
         }});
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('toggle-signup-form');
+        if (!form) return;
+
+        const usernameInput = document.getElementById('toggle-signup-username');
+        const emailInput = document.getElementById('toggle-signup-email');
+        const passwordInput = document.getElementById('toggle-signup-password');
+        const confirmInput = document.getElementById('toggle-signup-confirm-password');
+        const submitBtn = document.getElementById('toggle-signup-submit-btn');
+
+        let emailIsValidating = false;
+        let emailCheckTimeout = null;
+
+        function showError(input, errorElId, msg) {
+            input.classList.remove('is-valid-field');
+            input.classList.add('is-invalid-field');
+            const errorEl = document.getElementById(errorElId);
+            if (errorEl) {
+                errorEl.textContent = msg;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        function showSuccess(input, errorElId) {
+            input.classList.remove('is-invalid-field');
+            input.classList.add('is-valid-field');
+            const errorEl = document.getElementById(errorElId);
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+        }
+
+        function validateUsername() {
+            const val = usernameInput.value.trim();
+            if (val.length === 0) {
+                showError(usernameInput, 'toggle-username-error', 'Username is required.');
+                return false;
+            }
+            if (val.length < 3) {
+                showError(usernameInput, 'toggle-username-error', 'Username must be at least 3 characters.');
+                return false;
+            }
+            showSuccess(usernameInput, 'toggle-username-error');
+            return true;
+        }
+
+        function validatePassword() {
+            const val = passwordInput.value;
+            if (val.length === 0) {
+                showError(passwordInput, 'toggle-password-error', 'Password is required.');
+                return false;
+            }
+            if (val.length < 6) {
+                showError(passwordInput, 'toggle-password-error', 'Password must be at least 6 characters.');
+                return false;
+            }
+            showSuccess(passwordInput, 'toggle-password-error');
+            if (confirmInput.value.length > 0) {
+                validateConfirmPassword();
+            }
+            return true;
+        }
+
+        function validateConfirmPassword() {
+            const passVal = passwordInput.value;
+            const confirmVal = confirmInput.value;
+            if (confirmVal.length === 0) {
+                showError(confirmInput, 'toggle-confirm-password-error', 'Please confirm your password.');
+                return false;
+            }
+            if (passVal !== confirmVal) {
+                showError(confirmInput, 'toggle-confirm-password-error', 'Passwords do not match.');
+                return false;
+            }
+            showSuccess(confirmInput, 'toggle-confirm-password-error');
+            return true;
+        }
+
+        async function validateEmail(isSubmit = false) {
+            const val = emailInput.value.trim();
+            if (val.length === 0) {
+                showError(emailInput, 'toggle-email-error', 'Email is required.');
+                return false;
+            }
+            
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(val)) {
+                showError(emailInput, 'toggle-email-error', 'Invalid email format.');
+                return false;
+            }
+
+            if (!isSubmit) {
+                clearTimeout(emailCheckTimeout);
+                return new Promise((resolve) => {
+                    emailCheckTimeout = setTimeout(async () => {
+                        const ok = await performDnsCheck(val);
+                        resolve(ok);
+                    }, 500);
+                });
+            } else {
+                return await performDnsCheck(val);
+            }
+        }
+
+        async function performDnsCheck(email) {
+            emailIsValidating = true;
+            const errorEl = document.getElementById('toggle-email-error');
+            if (errorEl) {
+                errorEl.textContent = 'Verifying email...';
+                errorEl.style.color = '#cbd5e1';
+                errorEl.style.display = 'block';
+            }
+
+            try {
+                const res = await fetch('/api/validate-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await res.json();
+                emailIsValidating = false;
+                if (errorEl) errorEl.style.color = '#fca5a5';
+
+                if (data.valid) {
+                    showSuccess(emailInput, 'toggle-email-error');
+                    return true;
+                } else {
+                    showError(emailInput, 'toggle-email-error', data.message || 'Email domain is invalid.');
+                    return false;
+                }
+            } catch (err) {
+                emailIsValidating = false;
+                if (errorEl) errorEl.style.color = '#fca5a5';
+                showSuccess(emailInput, 'toggle-email-error');
+                return true;
+            }
+        }
+
+        usernameInput.addEventListener('input', validateUsername);
+        passwordInput.addEventListener('input', validatePassword);
+        confirmInput.addEventListener('input', validateConfirmPassword);
+        emailInput.addEventListener('input', () => validateEmail(false));
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const uOk = validateUsername();
+            const pOk = validatePassword();
+            const cOk = validateConfirmPassword();
+            
+            submitBtn.disabled = true;
+            const origBtnHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Verifying account details...</span>
+            `;
+
+            const eOk = await validateEmail(true);
+
+            if (uOk && pOk && cOk && eOk) {
+                form.submit();
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = origBtnHtml;
+                const firstInvalid = form.querySelector('.is-invalid-field');
+                if (firstInvalid) firstInvalid.focus();
+            }
+        });
+    });
 </script>
 {% endblock %}
