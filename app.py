@@ -67,7 +67,9 @@ def index():
 
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    spot_count = Hotel.query.filter_by(status='approved').count()
+    user_count = User.query.count()
+    return render_template('about.html', spot_count=spot_count, user_count=user_count)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():

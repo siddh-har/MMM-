@@ -49,7 +49,7 @@
 
     <!-- Hero Content -->
     <div class="relative z-20 text-center px-4 max-w-5xl mx-auto">
-        <h1 id="hero-title" class="text-6xl md:text-8xl font-black text-white mb-6 leading-tight opacity-0 hero-text-glow">
+        <h1 id="hero-title" class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight opacity-0 hero-text-glow">
             Unforgettable <br> <span class="brand-accent">Memories.</span>
         </h1>
         <p id="hero-subtitle" class="text-xl md:text-2xl text-white/90 mb-16 max-w-2xl mx-auto opacity-0 font-medium tracking-wide">
@@ -305,7 +305,7 @@
         // Hide hero and show results directly at top
         hero.style.display = 'none';
         section.classList.remove('hidden');
-        document.getElementById('navbar').classList.add('bg-gray-900', 'py-4');
+        if (typeof updateNavbarState === 'function') updateNavbarState();
         
         grid.innerHTML = hotels.length ? hotels.map(h => `
             <div class="live-card bg-white rounded-xl overflow-hidden shadow-2xl transition-all duration-500 opacity-0 translate-y-12 flex flex-col h-full">
@@ -356,6 +356,9 @@
 
     function hideResults() {
         document.getElementById('results-section').classList.add('hidden');
+        const hero = document.querySelector('section.luxury-gradient');
+        if (hero) hero.style.display = 'flex';
+        if (typeof updateNavbarState === 'function') updateNavbarState();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -389,7 +392,7 @@
                     currentSlide = nextSlide;
                 }, 400); // Wait for transition duration
                 
-            }, 1200); // Advanced rapid change (~1s)
+            }, 5000); // Elegant slow transition (5s)
         }
 
         gsap.to('.featured-text', { scrollTrigger: '#hotels-section', opacity: 1, x: 0, duration: 1 });

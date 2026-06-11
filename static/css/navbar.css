@@ -8,9 +8,9 @@
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 40px);
-    max-width: 1200px;
+    max-width: 1280px;
     border-radius: 2rem;
-    padding: 1rem 2rem;
+    padding: 1.25rem 3.5rem;
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -20,17 +20,42 @@
 /* Specific Navbar Overrides for Subpages */
 .nav-solid {
     background-color: #0f172a !important;
-    padding: 1rem 3rem !important;
+    padding: 1.25rem 3.5rem !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav-rounded {
     background-color: rgba(15, 23, 42, 0.95) !important;
-    padding: 1rem 3rem !important;
+    padding: 1.25rem 3.5rem !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 0 0 2rem 2rem;
     width: 100%;
     top: 0;
     left: 0;
     transform: none;
+}
+
+/* Responsive Mobile Layout Adjustments */
+@media (max-width: 768px) {
+    #navbar {
+        padding: 1.25rem 1.5rem !important;
+    }
+    
+    #navbar.scrolled {
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 24px);
+        border-radius: 1.25rem;
+        padding: 1rem 1.25rem !important;
+    }
+
+    .nav-solid {
+        padding: 1.25rem 1.5rem !important;
+    }
+
+    .nav-rounded {
+        padding: 1.25rem 1.5rem !important;
+        border-radius: 0 0 1.25rem 1.25rem;
+    }
 }

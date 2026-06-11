@@ -2,77 +2,173 @@
 
 {% block extra_css %}
 <style>
-    nav { background-color: #0f172a !important; padding: 1rem 2rem !important; }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 20px 40px -15px rgba(0,0,0,0.05);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    .glass-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 30px 60px -15px rgba(99, 102, 241, 0.15);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    .tech-pill {
+        background: rgba(99, 102, 241, 0.05);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        color: #4f46e5;
+    }
+
+    .timeline-dot::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #6366f1;
+        border: 4px solid #fff;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        top: 24px;
+        left: -8px;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <!-- About Page Hero -->
-<section class="pt-40 pb-20 luxury-gradient text-white text-center px-8">
-    <div class="max-w-4xl mx-auto">
-        <span class="text-indigo-400 font-bold tracking-widest uppercase text-sm mb-4 block opacity-0 translate-y-4 reveal">About Our Vision</span>
-        <h1 class="text-5xl md:text-6xl font-bold mb-6 opacity-0 translate-y-4 reveal">Redefining the Journey to <br> <span class="text-indigo-400">Perfect Moments.</span></h1>
+<section class="pt-48 pb-24 luxury-gradient text-white text-center px-8 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
+    <div class="max-w-4xl mx-auto relative z-10">
+        <span class="text-indigo-400 font-bold tracking-widest uppercase text-xs mb-4 block opacity-0 translate-y-4 reveal">Who We Are</span>
+        <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight opacity-0 translate-y-4 reveal">
+            Discovering Travel & Taste, <br> <span class="brand-accent">Perfectly Planned.</span>
+        </h1>
+        <p class="text-white/80 text-lg md:text-xl max-w-2xl mx-auto opacity-0 translate-y-4 reveal font-medium">
+            Make My Moment is a smart recommendations engine designed to match travelers and food lovers with handpicked premium experiences.
+        </p>
     </div>
 </section>
 
-<!-- Detailed About Section -->
+<!-- Core Platform Information -->
 <section class="py-32 bg-white px-8 overflow-hidden">
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-        <div class="about-text">
-            <span class="text-indigo-600 font-bold tracking-widest uppercase text-sm mb-4 block">Our Story</span>
-            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-8 leading-tight">Crafting Moments, <br> Not Just Bookings.</h2>
+        <div class="about-text reveal opacity-0 -translate-x-12">
+            <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-4 block">Our Origin</span>
+            <h2 class="text-4xl md:text-5xl font-black text-gray-900 mb-8 leading-tight">
+                Curating the Pride of <br> <span class="text-indigo-400">Kolhapur & Beyond.</span>
+            </h2>
             <div class="space-y-6 text-gray-600 text-lg leading-relaxed">
-                <p class="about-para">At <span class="font-bold text-gray-900">Make My Moment</span>, we believe that every outing should be an experience. We've moved beyond the basic "search and select" model to bring you a premium, smart discovery engine tailored to your unique vibe.</p>
-                <p class="about-para">Whether it's a rooftop dinner in Kolhapur or a luxury staycation, our system uses intelligent filtering and immersive UI to ensure you spend less time searching and more time making memories.</p>
-                <p class="about-para">We prioritize <span class="text-indigo-600 font-semibold italic">visual excellence</span> and <span class="text-indigo-600 font-semibold italic">seamless transitions</span> because we know the journey to your perfect moment starts right here, at first click.</p>
+                <p>
+                    Every city has a unique culinary heartbeat and architectural heritage. In <strong>Kolhapur</strong>, this heartbeat is found in the legendary thalis of <em>Dehati</em> and <em>Parakh</em>, the historic spiciest misals, and the premium resort stays like <em>Sayaji Hotel</em> and <em>The Fern Residency</em>.
+                </p>
+                <p>
+                    <strong>Make My Moment</strong> was built to eliminate decision fatigue. Instead of endless directories and generic, unverified review sites, our smart recommender matches your specific group size, budget tier, and mood to the finest spots in town.
+                </p>
+                <p>
+                    We built a system that values <strong>visual excellence</strong>, <strong>algorithmic speed</strong>, and <strong>hospitality accuracy</strong> to connect local premium partners with high-intent travelers instantly.
+                </p>
             </div>
             <div class="mt-12 flex gap-8">
-                <div>
-                    <span class="block text-3xl font-bold text-gray-900">500+</span>
-                    <span class="text-sm text-gray-500 uppercase tracking-widest">Handpicked Stays</span>
+                <div class="px-6 py-4 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span class="block text-4xl font-black text-indigo-600">{{ spot_count }}</span>
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-widest block mt-1">Verified Properties</span>
                 </div>
-                <div>
-                    <span class="block text-3xl font-bold text-gray-900">10k+</span>
-                    <span class="text-sm text-gray-500 uppercase tracking-widest">Happy Users</span>
+                <div class="px-6 py-4 rounded-2xl bg-gray-50 border border-gray-100">
+                    <span class="block text-4xl font-black text-indigo-600">{{ user_count }}</span>
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-widest block mt-1">Registered Users</span>
                 </div>
             </div>
         </div>
-        <div class="relative about-image">
-            <div class="absolute -top-10 -left-10 w-40 h-40 bg-indigo-100 rounded-full z-0"></div>
-            <div class="absolute -bottom-10 -right-10 w-60 h-60 bg-gray-100 rounded-full z-0"></div>
-            <img src="https://images.unsplash.com/photo-1551882547-ff43c63fedfe?auto=format&fit=crop&w=800&q=80" alt="Experience" class="relative z-10 w-full rounded-[3rem] shadow-2xl">
+        <div class="relative about-image reveal opacity-0 translate-x-12">
+            <div class="absolute -top-10 -left-10 w-40 h-40 bg-indigo-50 rounded-full z-0 animate-pulse"></div>
+            <div class="absolute -bottom-10 -right-10 w-60 h-60 bg-indigo-50/50 rounded-full z-0"></div>
+            <img src="/static/uploads/1778061443_sayaji.jpg" alt="Sayaji Hotel Kolhapur" class="relative z-10 w-full rounded-[3rem] shadow-2xl border border-gray-100">
         </div>
     </div>
 </section>
 
-<!-- Values Section -->
-<section class="py-24 bg-gray-50 px-8">
+<!-- Core Aims -->
+<section class="py-24 bg-gray-50 px-8 border-t border-b border-gray-100">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-20">
-            <h2 class="text-4xl font-bold mb-4">Our Core Values</h2>
-            <p class="text-gray-500">The pillars that make every moment special.</p>
+            <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-3 block">Mission Statement</span>
+            <h2 class="text-4xl md:text-5xl font-black text-gray-900">Our Strategic Aims</h2>
+            <p class="text-gray-500 text-base mt-4 max-w-xl mx-auto">Designed to revolutionize how we search, list, and experiences stays and food options.</p>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-smooth group">
-                <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-indigo-600 transition-smooth">
-                    <svg class="w-8 h-8 text-indigo-600 group-hover:text-white transition-smooth" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <div class="glass-card p-10 rounded-[2.5rem] flex flex-col h-full">
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 text-indigo-600">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
-                <h3 class="text-xl font-bold mb-4">Fast Discovery</h3>
-                <p class="text-gray-500">Gen-Z speed with intuitive flows that get you to your destination in seconds.</p>
+                <h3 class="text-2xl font-black mb-4 text-gray-900">Vibe-Based Matching</h3>
+                <p class="text-gray-500 leading-relaxed text-sm flex-grow">We aim to move past traditional filtering systems. By mapping venues to user categories like <em>Solo</em>, <em>Couple</em>, <em>Family</em>, or <em>Friends</em>, we ensure matches look like exactly what you expected.</p>
             </div>
-            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-smooth group">
-                <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-indigo-600 transition-smooth">
-                    <svg class="w-8 h-8 text-indigo-600 group-hover:text-white transition-smooth" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="glass-card p-10 rounded-[2.5rem] flex flex-col h-full">
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 text-indigo-600">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <h3 class="text-xl font-bold mb-4">Verified Quality</h3>
-                <p class="text-gray-500">Every stay and restaurant is handpicked and verified for the best experience.</p>
+                <h3 class="text-2xl font-black mb-4 text-gray-900">Strict Verification</h3>
+                <p class="text-gray-500 leading-relaxed text-sm flex-grow">Maintaining zero spam or fake entries. Every partner hotel or restaurant listing goes through our 3-step validation pipeline before showing up live on the recommender grid.</p>
             </div>
-            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-smooth group">
-                <div class="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-indigo-600 transition-smooth">
-                    <svg class="w-8 h-8 text-indigo-600 group-hover:text-white transition-smooth" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <div class="glass-card p-10 rounded-[2.5rem] flex flex-col h-full">
+                <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 text-indigo-600">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                 </div>
-                <h3 class="text-xl font-bold mb-4">Tailored Vibes</h3>
-                <p class="text-gray-500">We don't just find hotels; we match your mood, budget, and group type perfectly.</p>
+                <h3 class="text-2xl font-black mb-4 text-gray-900">Partner Empowerment</h3>
+                <p class="text-gray-500 leading-relaxed text-sm flex-grow">We provide property owners with custom dashboards to manage rates, highlight famous specialities, and directly respond to the travel demands of users.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Future Enhancements -->
+<section class="py-32 bg-white px-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
+            <div class="lg:col-span-1 reveal opacity-0 -translate-x-12">
+                <span class="text-indigo-600 font-bold tracking-widest uppercase text-xs mb-3 block">Roadmap</span>
+                <h2 class="text-4xl md:text-5xl font-black text-gray-900 leading-tight">Future <br> <span class="text-indigo-400">Enhancements.</span></h2>
+                <p class="text-gray-500 text-base mt-6 leading-relaxed">
+                    Our developers are constantly iterating to transform <strong>Make My Moment</strong> into a full-scale travel companion. Here is what is coming next in our pipeline:
+                </p>
+                <div class="mt-8 flex flex-wrap gap-2">
+                    <span class="tech-pill px-4 py-2 rounded-full text-xs font-bold">Capacitor</span>
+                    <span class="tech-pill px-4 py-2 rounded-full text-xs font-bold">AI Planner</span>
+                    <span class="tech-pill px-4 py-2 rounded-full text-xs font-bold">Instant Book</span>
+                </div>
+            </div>
+            
+            <div class="lg:col-span-2 border-l border-gray-100 pl-8 lg:pl-16 space-y-12 reveal opacity-0 translate-x-12">
+                <!-- Timeline item 1 -->
+                <div class="relative timeline-dot pl-6">
+                    <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Q3 2026</span>
+                    <h3 class="text-2xl font-black text-gray-900 mt-2">Native Mobile Experience</h3>
+                    <p class="text-gray-500 text-sm mt-3 leading-relaxed">
+                        Harnessing our built-in <strong>Capacitor</strong> configuration to build native Android and iOS applications. This will enable location-based push notifications and offline recommendations.
+                    </p>
+                </div>
+                
+                <!-- Timeline item 2 -->
+                <div class="relative timeline-dot pl-6">
+                    <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Q4 2026</span>
+                    <h3 class="text-2xl font-black text-gray-900 mt-2">AI-Driven Custom Itineraries</h3>
+                    <p class="text-gray-500 text-sm mt-3 leading-relaxed">
+                        Introducing an intelligent schedule generator. Enter your arrival dates, budget range, and category choices, and get a complete hour-by-hour weekend travel itinerary.
+                    </p>
+                </div>
+                
+                <!-- Timeline item 3 -->
+                <div class="relative timeline-dot pl-6">
+                    <span class="text-xs font-bold uppercase tracking-widest text-indigo-600">Q1 2027</span>
+                    <h3 class="text-2xl font-black text-gray-900 mt-2">Direct Booking & API Bridges</h3>
+                    <p class="text-gray-500 text-sm mt-3 leading-relaxed">
+                        Skip external mapping services. We will integrate secure, direct table reservations for dining spots and payment pipelines for hotel booking confirmations.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -80,13 +176,16 @@
 
 <script>
     window.addEventListener('DOMContentLoaded', () => {
-        gsap.to('.reveal', {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            stagger: 0.2,
-            ease: 'power3.out'
-        });
+        if (typeof gsap !== 'undefined') {
+            gsap.to('.reveal', {
+                opacity: 1,
+                x: 0,
+                y: 0,
+                duration: 1.2,
+                stagger: 0.15,
+                ease: 'power3.out'
+            });
+        }
     });
 </script>
 {% endblock %}
